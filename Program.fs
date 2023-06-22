@@ -43,7 +43,7 @@ module Counter =
             Button.width 10.0
             Button.height 10.0
             Button.background "Blue"
-            Button.onClick (fun _ ->
+            Button.onPointerPressed (fun _ ->
                 Msg.Selected |> dispatch)
             Button.onPointerReleased (fun _ ->
                 Msg.Deselected |> dispatch)
