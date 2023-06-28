@@ -4,9 +4,10 @@ open Avalonia
 
 module Counter =
 
-    open Avalonia.FuncUI.DSL
+    open Avalonia.Controls.Shapes
     open Avalonia.Controls
     open Avalonia.Layout
+    open Avalonia.FuncUI.DSL
 
     let notImplementedExn () =
         raise (System.NotImplementedException ())
@@ -39,26 +40,26 @@ module Counter =
     type Selection =
         | Block of blockIdx: int * pointerPosition: Point
         | Input of blockIdx: int
-        | Ouput of blockIdx: int
+        | Output of blockIdx: int
 
     [<RequireQualifiedAccess>]
     type Deselection =
         | Block of blockIdx: int
         | Input of blockIdx: int
-        | Ouput of blockIdx: int
+        | Output of blockIdx: int
 
     [<RequireQualifiedAccess>]
     type PointerState =
         | Neutral
         | Dragging of blockIdx: int
-        | ConnectingSource of blockIdx: int
-        | ConnectingTarget of blockIdx: int
+        | ConnectingOutput of blockIdx: int
+        | ConnectingInput of blockIdx: int
 
     [<RequireQualifiedAccess>]
     type Msg =
         | Selection of Selection
         | Deselection of Deselection
-        | Move of buttonIdx: int * newPointerPoint: Point
+        | Move of newPointerPoint: Point
 
     type State = {
         PointerState: PointerState
@@ -83,7 +84,6 @@ module Counter =
     }
 
 
-
     let update (msg: Msg) (state: State) : State =
         match msg with
         | Msg.Selection selection ->
@@ -94,8 +94,9 @@ module Counter =
                     { state with
                         PointerState = PointerState.Dragging blockIdx
                         PointerLocation = position }
-                | _ ->
-                    state
+                | Selection.Output blockIdx ->
+                    { state with
+                        PointerState = PointerState.ConnectingOutput blockIdx }
 
             | _ ->
                 state
@@ -109,18 +110,20 @@ module Counter =
             | _ ->
                     state
 
-        | Msg.Move (buttonIdx, newPointerPoint) ->
+        | Msg.Move newPointerPoint ->
             match state.PointerState with
             | PointerState.Dragging blockIdx ->
-                if buttonIdx = blockIdx then
-                    let delta = newPointerPoint - state.PointerLocation
-                    let newState =
-                        { state with
-                            PointerLocation = newPointerPoint }
-                    newState.Blocks.Locations[buttonIdx] <- state.Blocks.Locations[buttonIdx] + delta
-                    newState
-                else
-                    state
+                let delta = newPointerPoint - state.PointerLocation
+                let newState =
+                    { state with
+                        PointerLocation = newPointerPoint }
+                newState.Blocks.Locations[blockIdx] <- state.Blocks.Locations[blockIdx] + delta
+                newState
+
+            | PointerState.ConnectingOutput _ ->
+                { state with
+                    PointerLocation = newPointerPoint }
+
             | _ ->
                     state
 
@@ -147,16 +150,17 @@ module Counter =
                                 Msg.Deselection (Deselection.Block blockIdx) |> dispatch)
                             Button.onPointerMoved (fun e ->
                                 let newPointerLocation = e.GetPosition null
-                                Msg.Move (blockIdx, newPointerLocation) |> dispatch)
+                                Msg.Move newPointerLocation |> dispatch)
                         ]
                         Button.create [
                             Button.width 10.0
                             Button.height 10.0
                             Button.background "Yellow"
+                            Button.onPointerPressed (fun _ ->
+                                Msg.Selection (Selection.Output blockIdx) |> dispatch)
                         ]
                     ]
                 ]
-                
 
         let constraint dispatch (location: Point) (blockIdx: int) =
                 Button.create [
@@ -172,13 +176,14 @@ module Counter =
                         Msg.Deselection (Deselection.Block blockIdx) |> dispatch)
                     Button.onPointerMoved (fun e ->
                         let newPointerLocation = e.GetPosition null
-                        Msg.Move (blockIdx, newPointerLocation) |> dispatch)
+                        Msg.Move newPointerLocation |> dispatch)
                 ]
-
 
     let view (state: State) (dispatch) =
         Canvas.create [
-            Canvas.name "DragArea"
+            Canvas.onPointerMoved (fun e ->
+                let newPointerLocation = e.GetPosition null
+                Msg.Move newPointerLocation |> dispatch)
             Canvas.children [
                 for blockIdx in 0..state.Blocks.Count - 1 do
                     let location = state.Blocks.Locations[blockIdx]
@@ -187,6 +192,19 @@ module Counter =
                         Views.buffer dispatch location blockIdx
                     | BlockType.Constraint ->
                         Views.constraint dispatch location blockIdx
+
+                match state.PointerState with
+                | PointerState.ConnectingOutput blockIdx ->
+                    let location = state.Blocks.Locations[blockIdx]
+                    Line.create [
+                        Line.startPoint (location + (Point (100.0, 25.0)))
+                        Line.endPoint state.PointerLocation
+                        Line.stroke "Red"
+                        Line.strokeThickness 2.0
+                    ]
+
+                | _ -> ()
+                    
             ]
         ]
 
