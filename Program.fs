@@ -8,18 +8,49 @@ module Counter =
     open Avalonia.Controls
     open Avalonia.Layout
 
+    [<RequireQualifiedAccess>]
+    type BlockType =
+        | Buffer
+        | Constraint
+        // | Merge
+        // | Split
+        // | Conveyor
+        // | Conversion
+
+    type Block =
+        {
+            Location: Point
+            Type: BlockType
+            Width: float
+            Height: float
+        }
+
+    type Blocks =
+        {
+            Count: int
+            Locations: Point[]
+            Types: BlockType[]
+        }
+
     type State = {
         SelectedButton: int
-        ButtonLocations: Point[]
+        Blocks: Blocks
         PointerLocation: Point
     }
     let init() = {
         SelectedButton = -1
-        ButtonLocations = 
-            [|
-                Point (10.0, 10.0)
-                Point (10.0, 100.0)
-            |]
+        Blocks =
+            {
+                Count = 2
+                Locations = [|
+                    Point (10.0, 10.0)
+                    Point (10.0, 100.0)
+                |]
+                Types = [|
+                    BlockType.Buffer
+                    BlockType.Buffer
+                |]
+            }
         PointerLocation = Point (0.0, 0.0)
     }
 
@@ -46,7 +77,7 @@ module Counter =
                 let newState =
                     { state with
                         PointerLocation = newPointerPoint }
-                newState.ButtonLocations[buttonIdx] <- state.ButtonLocations[buttonIdx] + delta
+                newState.Blocks.Locations[buttonIdx] <- state.Blocks.Locations[buttonIdx] + delta
                 newState
             else
                 state
@@ -55,11 +86,11 @@ module Counter =
         Canvas.create [
             Canvas.name "DragArea"
             Canvas.children [
-                for i in 0..state.ButtonLocations.Length - 1 do
-                    let button = state.ButtonLocations[i]
+                for i in 0..state.Blocks.Count - 1 do
+                    let location = state.Blocks.Locations[i]
                     Button.create [
-                        Button.top button.Y
-                        Button.left button.X
+                        Button.top location.Y
+                        Button.left location.X
                         Button.width 100.0
                         Button.height 50.0
                         Button.background "Blue"
