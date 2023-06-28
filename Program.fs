@@ -199,7 +199,7 @@ module Counter =
                     Line.create [
                         Line.startPoint (location + (Point (100.0, 25.0)))
                         Line.endPoint state.PointerLocation
-                        Line.stroke "Red"
+                        Line.stroke "Green"
                         Line.strokeThickness 2.0
                     ]
 
