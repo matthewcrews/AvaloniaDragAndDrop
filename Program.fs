@@ -8,6 +8,9 @@ module Counter =
     open Avalonia.Controls
     open Avalonia.Layout
 
+    let notImplementedExn () =
+        raise (System.NotImplementedException ())
+
     [<RequireQualifiedAccess>]
     type BlockType =
         | Buffer
@@ -32,13 +35,38 @@ module Counter =
             Types: BlockType[]
         }
 
+    [<RequireQualifiedAccess>]
+    type Selection =
+        | Block of blockIdx: int * pointerPosition: Point
+        | Input of blockIdx: int
+        | Ouput of blockIdx: int
+
+    [<RequireQualifiedAccess>]
+    type Deselection =
+        | Block of blockIdx: int
+        | Input of blockIdx: int
+        | Ouput of blockIdx: int
+
+    [<RequireQualifiedAccess>]
+    type PointerState =
+        | Neutral
+        | Dragging of blockIdx: int
+        | ConnectingSource of blockIdx: int
+        | ConnectingTarget of blockIdx: int
+
+    [<RequireQualifiedAccess>]
+    type Msg =
+        | Selection of Selection
+        | Deselection of Deselection
+        | Move of buttonIdx: int * newPointerPoint: Point
+
     type State = {
-        SelectedButton: int
+        PointerState: PointerState
         Blocks: Blocks
         PointerLocation: Point
     }
     let init() = {
-        SelectedButton = -1
+        PointerState = PointerState.Neutral
         Blocks =
             {
                 Count = 2
@@ -48,61 +76,117 @@ module Counter =
                 |]
                 Types = [|
                     BlockType.Buffer
-                    BlockType.Buffer
+                    BlockType.Constraint
                 |]
             }
         PointerLocation = Point (0.0, 0.0)
     }
 
-    [<RequireQualifiedAccess>]
-    type Msg =
-    | Selected of buttonIdx: int * pointerLocation: Point
-    | Deselected
-    | Move of buttonIdx: int * newPointerPoint: Point
+
 
     let update (msg: Msg) (state: State) : State =
         match msg with
-        | Msg.Selected (buttonIdx, position) ->
-            { state with
-                SelectedButton = buttonIdx
-                PointerLocation = position }
+        | Msg.Selection selection ->
+            match state.PointerState with
+            | PointerState.Neutral ->
+                match selection with
+                | Selection.Block (blockIdx, position) ->
+                    { state with
+                        PointerState = PointerState.Dragging blockIdx
+                        PointerLocation = position }
+                | _ ->
+                    state
 
-        | Msg.Deselected ->
-            { state with
-                SelectedButton = -1 }
+            | _ ->
+                state
+
+        | Msg.Deselection deselection ->
+
+            match state.PointerState, deselection with
+            | PointerState.Dragging draggingBlockIdx, _ ->
+                { state with
+                    PointerState = PointerState.Neutral }
+            | _ ->
+                    state
 
         | Msg.Move (buttonIdx, newPointerPoint) ->
-            if state.SelectedButton = buttonIdx then
-                let delta = newPointerPoint - state.PointerLocation
-                let newState =
-                    { state with
-                        PointerLocation = newPointerPoint }
-                newState.Blocks.Locations[buttonIdx] <- state.Blocks.Locations[buttonIdx] + delta
-                newState
-            else
-                state
+            match state.PointerState with
+            | PointerState.Dragging blockIdx ->
+                if buttonIdx = blockIdx then
+                    let delta = newPointerPoint - state.PointerLocation
+                    let newState =
+                        { state with
+                            PointerLocation = newPointerPoint }
+                    newState.Blocks.Locations[buttonIdx] <- state.Blocks.Locations[buttonIdx] + delta
+                    newState
+                else
+                    state
+            | _ ->
+                    state
+
+    module Views =
+
+        let buffer dispatch (location: Point) (blockIdx: int) =
+                DockPanel.create [
+                    DockPanel.top location.Y
+                    DockPanel.left location.X
+                    DockPanel.children [
+                        Button.create [
+                            Button.width 10.0
+                            Button.height 10.0
+                            Button.background "Yellow"
+                        ]
+                        Button.create [
+                            Button.width 100.0
+                            Button.height 50.0
+                            Button.background "Blue"
+                            Button.onPointerPressed (fun e ->
+                                let newPointerLocation = e.GetPosition null
+                                Msg.Selection (Selection.Block (blockIdx, newPointerLocation)) |> dispatch)
+                            Button.onPointerReleased (fun _ ->
+                                Msg.Deselection (Deselection.Block blockIdx) |> dispatch)
+                            Button.onPointerMoved (fun e ->
+                                let newPointerLocation = e.GetPosition null
+                                Msg.Move (blockIdx, newPointerLocation) |> dispatch)
+                        ]
+                        Button.create [
+                            Button.width 10.0
+                            Button.height 10.0
+                            Button.background "Yellow"
+                        ]
+                    ]
+                ]
+                
+
+        let constraint dispatch (location: Point) (blockIdx: int) =
+                Button.create [
+                    Button.top location.Y
+                    Button.left location.X
+                    Button.width 100.0
+                    Button.height 50.0
+                    Button.background "Red"
+                    Button.onPointerPressed (fun e ->
+                        let newPointerLocation = e.GetPosition null
+                        Msg.Selection (Selection.Block (blockIdx, newPointerLocation)) |> dispatch)
+                    Button.onPointerReleased (fun _ ->
+                        Msg.Deselection (Deselection.Block blockIdx) |> dispatch)
+                    Button.onPointerMoved (fun e ->
+                        let newPointerLocation = e.GetPosition null
+                        Msg.Move (blockIdx, newPointerLocation) |> dispatch)
+                ]
+
 
     let view (state: State) (dispatch) =
         Canvas.create [
             Canvas.name "DragArea"
             Canvas.children [
-                for i in 0..state.Blocks.Count - 1 do
-                    let location = state.Blocks.Locations[i]
-                    Button.create [
-                        Button.top location.Y
-                        Button.left location.X
-                        Button.width 100.0
-                        Button.height 50.0
-                        Button.background "Blue"
-                        Button.onPointerPressed (fun e ->
-                            let newPointerLocation = e.GetPosition null
-                            Msg.Selected (i, newPointerLocation) |> dispatch)
-                        Button.onPointerReleased (fun _ ->
-                            Msg.Deselected |> dispatch)
-                        Button.onPointerMoved (fun e ->
-                            let newPointerLocation = e.GetPosition null
-                            Msg.Move (i, newPointerLocation) |> dispatch)
-                    ]
+                for blockIdx in 0..state.Blocks.Count - 1 do
+                    let location = state.Blocks.Locations[blockIdx]
+                    match state.Blocks.Types[blockIdx] with
+                    | BlockType.Buffer ->
+                        Views.buffer dispatch location blockIdx
+                    | BlockType.Constraint ->
+                        Views.constraint dispatch location blockIdx
             ]
         ]
 
