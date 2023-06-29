@@ -49,6 +49,7 @@ type PointerState =
     | Dragging of blockIdx: int
     | ConnectingOutput of blockIdx: int
     | ConnectingInput of blockIdx: int
+    | AddingElement
 
 [<RequireQualifiedAccess>]
 type Msg =
@@ -56,6 +57,7 @@ type Msg =
     | Selection of Selection
     | Deselection of Deselection
     | Move of newPointerPoint: Point
+    | RequestAddItem of location: Point
 
 [<Struct>]
 type Connection = {
@@ -95,6 +97,12 @@ module State =
         | Msg.Escape ->
             { state with
                 PointerState = PointerState.Neutral }
+
+        | Msg.RequestAddItem pointerLocation ->
+            { state with
+                PointerState = PointerState.AddingElement
+                PointerLocation = pointerLocation }
+
         | Msg.Selection selection ->
             match state.PointerState with
             | PointerState.Neutral ->
@@ -161,9 +169,6 @@ module State =
                 newState.Blocks.Locations[blockIdx] <- state.Blocks.Locations[blockIdx] + delta
                 newState
 
-            | PointerState.ConnectingOutput _ ->
+            | _ ->
                 { state with
                     PointerLocation = newPointerPoint }
-
-            | _ ->
-                    state
