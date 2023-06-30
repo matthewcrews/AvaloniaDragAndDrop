@@ -109,6 +109,9 @@ let constraint dispatch (location: Point) (blockIdx: int) =
                     e.Handled <- true
                     let newPointerLocation = e.GetPosition null
                     Msg.Move newPointerLocation |> dispatch)
+                Button.onDoubleTapped (fun e ->
+                    e.Handled <- true
+                    Msg.StartEditing blockIdx |> dispatch)
             ]
             outputAnchor dispatch blockIdx
         ]
@@ -214,14 +217,16 @@ let view (state: State) (dispatch) =
             match state.EditBlock with
             | None -> ()
             | Some blockIdx ->
-                match state.Blocks.Types[blockIdx] with
-                | BlockType.Buffer bufferId ->
-                    let location = state.Blocks.Locations[blockIdx]
-                    let bufferAttr = state.Blocks.BufferAttrs[bufferId]
-                    StackPanel.create [
-                        StackPanel.background "Black"
-                        StackPanel.orientation Orientation.Vertical
-                        StackPanel.children [
+                let location = state.Blocks.Locations[blockIdx]
+                StackPanel.create [
+                    StackPanel.background "Black"
+                    StackPanel.top location.Y
+                    StackPanel.left location.X
+                    StackPanel.orientation Orientation.Vertical
+                    StackPanel.children [
+                        match state.Blocks.Types[blockIdx] with
+                        | BlockType.Buffer bufferId ->
+                            let bufferAttr = state.Blocks.BufferAttrs[bufferId]
                             TextBlock.create [
                                 TextBlock.text "Capacity"
                             ]
@@ -240,8 +245,20 @@ let view (state: State) (dispatch) =
                                     Msg.BlockChange (BlockChange.Buffer (BufferChange.InitialVolume (bufferId, float e)))
                                     |> dispatch)
                             ]
-                        ]
-                    ]
+
+                        | BlockType.Constraint constraintId ->
+                            let constraintAttr = state.Blocks.ConstraintAttrs[constraintId]
+                            TextBlock.create [
+                                TextBlock.text "Limit"
+                            ]
+                            TextBox.create [
+                                TextBox.text (string constraintAttr.Limit)
+                                TextBox.onTextChanged (fun e ->
+                                    Msg.BlockChange (BlockChange.Constraint (ConstraintChange.Limit (constraintId, float e)))
+                                    |> dispatch)
+                            ]
+                ]
+                ]
 
 
         ]

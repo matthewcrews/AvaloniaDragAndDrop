@@ -44,13 +44,18 @@ type Block =
         Type: BlockType
     }
 
+type ConstraintAttr =
+    {
+        Limit: float
+    }
+
 type Blocks =
     {
         Count: int
         Locations: Point[]
         Types: BlockType[]
         BufferAttrs: BufferAttr[]
-
+        ConstraintAttrs: ConstraintAttr[]
     }
 
 [<RequireQualifiedAccess>]
@@ -160,6 +165,11 @@ module State =
                         InitialVolume = 100.0
                     }
                 |]
+                ConstraintAttrs = [|
+                    {
+                        Limit = 10.0
+                    }
+                |]
             }
         Connections = Set.empty
         PointerLocation = Point (0.0, 0.0)
@@ -193,7 +203,7 @@ module State =
             | BlockChange.Constraint constraintChange ->
                 match constraintChange with
                 | ConstraintChange.Limit(constraintId, newLimit) ->
-
+                    state.Blocks.ConstraintAttrs[constraintId] <- { state.Blocks.ConstraintAttrs[constraintId] with Limit = newLimit }
                     state
 
         | Msg.AddBlock addBlockPayload ->
