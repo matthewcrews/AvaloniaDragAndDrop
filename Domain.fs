@@ -7,6 +7,15 @@ open Avalonia
 let notImplementedExn () =
     raise (System.NotImplementedException ())
 
+module Array =
+
+    let add elem (array: _[]) =
+        let newArray = Array.zeroCreate (array.Length + 1)
+        array.CopyTo (newArray, 0)
+        newArray[array.Length] <- elem
+        newArray
+
+
 [<RequireQualifiedAccess>]
 type BlockType =
     | Buffer
@@ -51,6 +60,11 @@ type PointerState =
     | ConnectingInput of blockIdx: int
     | AddingElement
 
+type AddBlockPayload = {
+    Location: Point
+    BlockType: BlockType
+}
+
 [<RequireQualifiedAccess>]
 type Msg =
     | Escape
@@ -58,6 +72,7 @@ type Msg =
     | Deselection of Deselection
     | Move of newPointerPoint: Point
     | RequestAddItem of location: Point
+    | AddBlock of addBlockPayload: AddBlockPayload
 
 [<Struct>]
 type Connection = {
@@ -70,6 +85,7 @@ type State = {
     Blocks: Blocks
     PointerLocation: Point
     Connections: Set<Connection>
+    AddElementMenuLocation: Point
 }
 
 module State =
@@ -90,6 +106,7 @@ module State =
             }
         Connections = Set.empty
         PointerLocation = Point (0.0, 0.0)
+        AddElementMenuLocation = Point (0.0, 0.0)
     }
 
     let update (msg: Msg) (state: State) : State =
@@ -98,10 +115,18 @@ module State =
             { state with
                 PointerState = PointerState.Neutral }
 
+        | Msg.AddBlock addBlockPayload ->
+            { state with
+                PointerState = PointerState.Neutral
+                Blocks = { state.Blocks with
+                            Count = state.Blocks.Count + 1
+                            Types = Array.add addBlockPayload.BlockType state.Blocks.Types
+                            Locations = Array.add addBlockPayload.Location state.Blocks.Locations } }
+
         | Msg.RequestAddItem pointerLocation ->
             { state with
                 PointerState = PointerState.AddingElement
-                PointerLocation = pointerLocation }
+                AddElementMenuLocation = pointerLocation }
 
         | Msg.Selection selection ->
             match state.PointerState with

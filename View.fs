@@ -118,7 +118,7 @@ let view (state: State) (dispatch) =
         Canvas.name canvasName
         Canvas.background "DarkSlateGray"
         Canvas.onKeyUp (fun e ->
-            if e.Key = Input.Key.Escape then
+            if e.Key = Key.Escape then
                 Msg.Escape |> dispatch)
         Canvas.onPointerMoved (fun e ->
             let source : Control = e.Source :?> Control
@@ -186,18 +186,24 @@ let view (state: State) (dispatch) =
             | PointerState.AddingElement ->
                 StackPanel.create [
                     StackPanel.orientation Orientation.Vertical
-                    StackPanel.left state.PointerLocation.X
-                    StackPanel.top state.PointerLocation.Y
+                    StackPanel.left state.AddElementMenuLocation.X
+                    StackPanel.top state.AddElementMenuLocation.Y
                     StackPanel.children [
                         Button.create [
-                            Button.name "Buffer"
+                            Button.content "Buffer"
                             Button.width 50.0
                             Button.height 30.0
+                            Button.onClick (fun e ->
+                                e.Handled <- true
+                                Msg.AddBlock { BlockType = BlockType.Buffer; Location = state.AddElementMenuLocation } |> dispatch)
                         ]
                         Button.create [
-                            Button.name "Constraint"
+                            Button.content "Constraint"
                             Button.width 50.0
                             Button.height 30.0
+                            Button.onClick (fun e ->
+                                e.Handled <- true
+                                Msg.AddBlock { BlockType = BlockType.Constraint; Location = state.AddElementMenuLocation } |> dispatch)
                         ]
                     ]
                 ]
