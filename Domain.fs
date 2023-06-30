@@ -16,10 +16,22 @@ module Array =
         newArray
 
 
+type BufferAttr =
+    {
+        Capacity: float
+        InitialVolume: float
+    }
+    static member Zero =
+        {
+            Capacity = 100.0
+            InitialVolume = 100.0
+        }
+
+
 [<RequireQualifiedAccess>]
 type BlockType =
-    | Buffer
-    | Constraint
+    | Buffer of blockId: int
+    | Constraint of constraintId: int
     // | Merge
     // | Split
     // | Conveyor
@@ -29,8 +41,6 @@ type Block =
     {
         Location: Point
         Type: BlockType
-        Width: float
-        Height: float
     }
 
 type Blocks =
@@ -38,6 +48,8 @@ type Blocks =
         Count: int
         Locations: Point[]
         Types: BlockType[]
+        BufferAttrs: BufferAttr[]
+
     }
 
 [<RequireQualifiedAccess>]
@@ -60,9 +72,14 @@ type PointerState =
     | ConnectingInput of blockIdx: int
     | AddingElement
 
+
+type AddBlockType =
+    | Buffer
+    | Constraint
+
 type AddBlockPayload = {
     Location: Point
-    BlockType: BlockType
+    AddBlockType: AddBlockType
 }
 
 [<RequireQualifiedAccess>]
@@ -80,7 +97,24 @@ type Connection = {
     Target: int
 }
 
+type NextIds =
+    {
+        Buffer: int
+        Constraint: int
+    }
+    static member Zero =
+        {
+            Buffer = 0
+            Constraint = 0
+        }
+    static member nextBufferId nextIds =
+        nextIds.Buffer + 1, { nextIds with Buffer = nextIds.Buffer + 1 }
+
+    static member nextConstraintId nextIds =
+        nextIds.Constraint + 1, { nextIds with Constraint =  nextIds.Constraint + 1 }
+
 type State = {
+    NextIds: NextIds
     PointerState: PointerState
     Blocks: Blocks
     PointerLocation: Point
@@ -91,6 +125,7 @@ type State = {
 module State =
 
     let init () = {
+        NextIds = NextIds.Zero
         PointerState = PointerState.Neutral
         Blocks =
             {
@@ -100,8 +135,14 @@ module State =
                     Point (10.0, 100.0)
                 |]
                 Types = [|
-                    BlockType.Buffer
-                    BlockType.Constraint
+                    BlockType.Buffer 0
+                    BlockType.Constraint 0
+                |]
+                BufferAttrs = [|
+                    {
+                        Capacity = 100.0
+                        InitialVolume = 100.0
+                    }
                 |]
             }
         Connections = Set.empty
@@ -116,12 +157,26 @@ module State =
                 PointerState = PointerState.Neutral }
 
         | Msg.AddBlock addBlockPayload ->
-            { state with
-                PointerState = PointerState.Neutral
-                Blocks = { state.Blocks with
-                            Count = state.Blocks.Count + 1
-                            Types = Array.add addBlockPayload.BlockType state.Blocks.Types
-                            Locations = Array.add addBlockPayload.Location state.Blocks.Locations } }
+            match addBlockPayload.AddBlockType with
+            | AddBlockType.Buffer ->
+                let bufferId, nextIds = NextIds.nextBufferId state.NextIds
+                { state with
+                    NextIds = nextIds
+                    PointerState = PointerState.Neutral
+                    Blocks = { state.Blocks with
+                                Count = state.Blocks.Count + 1
+                                Types = Array.add (BlockType.Buffer bufferId) state.Blocks.Types
+                                Locations = Array.add addBlockPayload.Location state.Blocks.Locations } }
+            | AddBlockType.Constraint ->
+                let constraintId, nextIds = NextIds.nextBufferId state.NextIds
+                { state with
+                    NextIds = nextIds
+                    PointerState = PointerState.Neutral
+                    Blocks = { state.Blocks with
+                                Count = state.Blocks.Count + 1
+                                Types = Array.add (BlockType.Constraint constraintId) state.Blocks.Types
+                                Locations = Array.add addBlockPayload.Location state.Blocks.Locations } }
+
 
         | Msg.RequestAddItem pointerLocation ->
             { state with

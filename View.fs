@@ -5,9 +5,35 @@ open Avalonia.Controls.Shapes
 open Avalonia.Controls
 open Avalonia.FuncUI.DSL
 open Avalonia.Input
-open Avalonia.Interactivity
 open Avalonia.Layout
+open Avalonia.Media
 open AvaloniaDragAndDrop.Domain
+
+
+module Dims =
+
+    module Block =
+
+        let width = 100.0
+        let height = 50.0
+
+    module Buffer =
+
+        let color = "Blue"
+
+    module Constraint =
+
+        let color = "Red"
+
+    module Line =
+
+        let color = "Green"
+
+    module Anchor =
+
+        let width = 10.0
+        let height = 10.0
+        let color = "Yellow"
 
 
 let addItemMenu =
@@ -27,24 +53,37 @@ let addItemMenu =
         ]
     ]
 
+let inputAnchor dispatch blockIdx =
+    Button.create [
+        Button.width Dims.Anchor.width
+        Button.height Dims.Anchor.height
+        Button.background Dims.Anchor.color
+        Button.onPointerReleased (fun e ->
+            e.Handled <- true
+            Msg.Selection (Selection.Input blockIdx) |> dispatch)
+    ]
+
+let outputAnchor dispatch blockIdx =
+    Button.create [
+        Button.width Dims.Anchor.width
+        Button.height Dims.Anchor.height
+        Button.background Dims.Anchor.color
+        Button.onPointerReleased (fun e ->
+            e.Handled <- true
+            Msg.Selection (Selection.Output blockIdx) |> dispatch)
+    ]
+
 
 let buffer dispatch (location: Point) (blockIdx: int) =
     DockPanel.create [
         DockPanel.top location.Y
         DockPanel.left location.X
         DockPanel.children [
+            inputAnchor dispatch blockIdx
             Button.create [
-                Button.width 10.0
-                Button.height 10.0
-                Button.background "Yellow"
-                Button.onPointerReleased (fun e ->
-                    e.Handled <- true
-                    Msg.Selection (Selection.Input blockIdx) |> dispatch)
-            ]
-            Button.create [
-                Button.width 100.0
-                Button.height 50.0
-                Button.background "Blue"
+                Button.width Dims.Block.width
+                Button.height Dims.Block.height
+                Button.background Dims.Buffer.color
                 Button.onPointerPressed (fun e ->
                     e.Handled <- true
                     let newPointerLocation = e.GetPosition null
@@ -57,16 +96,7 @@ let buffer dispatch (location: Point) (blockIdx: int) =
                     let newPointerLocation = e.GetPosition null
                     Msg.Move newPointerLocation |> dispatch)
             ]
-            Button.create [
-                Button.width 10.0
-                Button.height 10.0
-                Button.background "Yellow"
-                Button.onPointerReleased (fun e ->
-                    e.Handled <- true
-                    Msg.Selection (Selection.Output blockIdx) |> dispatch)
-                // Button.onPointerReleased (fun e ->
-                //     e.Route <- RoutingStrategies.Direct)
-            ]
+            outputAnchor dispatch blockIdx
         ]
     ]
 
@@ -75,20 +105,13 @@ let constraint dispatch (location: Point) (blockIdx: int) =
         DockPanel.top location.Y
         DockPanel.left location.X
         DockPanel.children [
-            Button.create [
-                Button.width 10.0
-                Button.height 10.0
-                Button.background "Yellow"
-                Button.onPointerReleased (fun e ->
-                    e.Handled <- true
-                    Msg.Selection (Selection.Input blockIdx) |> dispatch)
-            ]
+            inputAnchor dispatch blockIdx
             Button.create [
                 Button.top location.Y
                 Button.left location.X
-                Button.width 100.0
-                Button.height 50.0
-                Button.background "Red"
+                Button.width Dims.Block.width
+                Button.height Dims.Block.height
+                Button.background Dims.Constraint.color
                 Button.onPointerPressed (fun e ->
                     e.Handled <- true
                     let newPointerLocation = e.GetPosition null
@@ -101,14 +124,7 @@ let constraint dispatch (location: Point) (blockIdx: int) =
                     let newPointerLocation = e.GetPosition null
                     Msg.Move newPointerLocation |> dispatch)
             ]
-            Button.create [
-                Button.width 10.0
-                Button.height 10.0
-                Button.background "Yellow"
-                Button.onPointerReleased (fun e ->
-                    e.Handled <- true
-                    Msg.Selection (Selection.Output blockIdx) |> dispatch)
-            ]
+            outputAnchor dispatch blockIdx
         ]
     ]
 
@@ -139,7 +155,6 @@ let view (state: State) (dispatch) =
                     ()
             )
 
-
         Canvas.children [
             match state.PointerState with
             | PointerState.ConnectingOutput blockIdx ->
@@ -147,7 +162,7 @@ let view (state: State) (dispatch) =
                 Line.create [
                     Line.startPoint (location + (Point (100.0, 25.0)))
                     Line.endPoint state.PointerLocation
-                    Line.stroke "Green"
+                    Line.stroke Dims.Line.color
                     Line.strokeThickness 2.0
                 ]
 
@@ -156,7 +171,7 @@ let view (state: State) (dispatch) =
                 Line.create [
                     Line.startPoint location
                     Line.endPoint state.PointerLocation
-                    Line.stroke "Green"
+                    Line.stroke Dims.Line.color
                     Line.strokeThickness 2.0
                 ]
 
@@ -165,7 +180,6 @@ let view (state: State) (dispatch) =
             for connection in state.Connections do
                 let sourceLocation = state.Blocks.Locations[connection.Source]
                 let targetLocation = state.Blocks.Locations[connection.Target]
-
                 Line.create [
                     Line.startPoint (sourceLocation + (Point (100.0, 25.0)))
                     Line.endPoint targetLocation
@@ -176,10 +190,10 @@ let view (state: State) (dispatch) =
             for blockIdx in 0..state.Blocks.Count - 1 do
                 let location = state.Blocks.Locations[blockIdx]
                 match state.Blocks.Types[blockIdx] with
-                | BlockType.Buffer ->
+                | BlockType.Buffer bufferId ->
                     buffer dispatch location blockIdx
 
-                | BlockType.Constraint ->
+                | BlockType.Constraint constraintId ->
                     constraint dispatch location blockIdx
 
             match state.PointerState with
@@ -191,19 +205,19 @@ let view (state: State) (dispatch) =
                     StackPanel.children [
                         Button.create [
                             Button.content "Buffer"
-                            Button.width 50.0
+                            Button.width 100.0
                             Button.height 30.0
                             Button.onClick (fun e ->
                                 e.Handled <- true
-                                Msg.AddBlock { BlockType = BlockType.Buffer; Location = state.AddElementMenuLocation } |> dispatch)
+                                Msg.AddBlock { AddBlockType = AddBlockType.Buffer; Location = state.AddElementMenuLocation } |> dispatch)
                         ]
                         Button.create [
                             Button.content "Constraint"
-                            Button.width 50.0
+                            Button.width 100.0
                             Button.height 30.0
                             Button.onClick (fun e ->
                                 e.Handled <- true
-                                Msg.AddBlock { BlockType = BlockType.Constraint; Location = state.AddElementMenuLocation } |> dispatch)
+                                Msg.AddBlock { AddBlockType = AddBlockType.Constraint; Location = state.AddElementMenuLocation } |> dispatch)
                         ]
                     ]
                 ]
