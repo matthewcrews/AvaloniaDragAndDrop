@@ -36,23 +36,6 @@ module Dims =
         let color = "Yellow"
 
 
-let addItemMenu =
-    StackPanel.create [
-        StackPanel.orientation Orientation.Vertical
-        StackPanel.children [
-            Button.create [
-                Button.name "Buffer"
-                Button.width 50.0
-                Button.height 30.0
-            ]
-            Button.create [
-                Button.name "Constraint"
-                Button.width 50.0
-                Button.height 30.0
-            ]
-        ]
-    ]
-
 let inputAnchor dispatch blockIdx =
     Button.create [
         Button.width Dims.Anchor.width
@@ -95,6 +78,9 @@ let buffer dispatch (location: Point) (blockIdx: int) =
                     e.Handled <- true
                     let newPointerLocation = e.GetPosition null
                     Msg.Move newPointerLocation |> dispatch)
+                Button.onDoubleTapped (fun e ->
+                    e.Handled <- true
+                    Msg.StartEditing blockIdx |> dispatch)
             ]
             outputAnchor dispatch blockIdx
         ]
@@ -224,6 +210,38 @@ let view (state: State) (dispatch) =
 
             | _ ->
                 ()
+
+            match state.EditBlock with
+            | None -> ()
+            | Some blockIdx ->
+                match state.Blocks.Types[blockIdx] with
+                | BlockType.Buffer bufferId ->
+                    let location = state.Blocks.Locations[blockIdx]
+                    let bufferAttr = state.Blocks.BufferAttrs[bufferId]
+                    StackPanel.create [
+                        StackPanel.background "Black"
+                        StackPanel.orientation Orientation.Vertical
+                        StackPanel.children [
+                            TextBlock.create [
+                                TextBlock.text "Capacity"
+                            ]
+                            TextBox.create [
+                                TextBox.text (string bufferAttr.Capacity)
+                                TextBox.onTextChanged (fun e ->
+                                    Msg.BlockChange (BlockChange.Buffer (BufferChange.Capacity (bufferId, float e)))
+                                    |> dispatch)
+                            ]
+                            TextBlock.create [
+                                TextBlock.text "Initial Volume"
+                            ]
+                            TextBox.create [
+                                TextBox.text (string bufferAttr.InitialVolume)
+                                TextBox.onTextChanged (fun e ->
+                                    Msg.BlockChange (BlockChange.Buffer (BufferChange.InitialVolume (bufferId, float e)))
+                                    |> dispatch)
+                            ]
+                        ]
+                    ]
 
 
         ]

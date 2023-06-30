@@ -3,6 +3,7 @@
 #nowarn "46"
 
 open Avalonia
+open Microsoft.FSharp.Core
 
 let notImplementedExn () =
     raise (System.NotImplementedException ())
@@ -30,7 +31,7 @@ type BufferAttr =
 
 [<RequireQualifiedAccess>]
 type BlockType =
-    | Buffer of blockId: int
+    | Buffer of bufferId: int
     | Constraint of constraintId: int
     // | Merge
     // | Split
@@ -82,6 +83,18 @@ type AddBlockPayload = {
     AddBlockType: AddBlockType
 }
 
+type BufferChange =
+    | InitialVolume of bufferId: int * newInitialVolume: float
+    | Capacity of bufferId: int * newCapacity: float
+
+type ConstraintChange =
+    | Limit of constraintId: int * newLimit: float
+
+type BlockChange =
+    | Buffer of BufferChange
+    | Constraint of ConstraintChange
+
+
 [<RequireQualifiedAccess>]
 type Msg =
     | Escape
@@ -90,6 +103,8 @@ type Msg =
     | Move of newPointerPoint: Point
     | RequestAddItem of location: Point
     | AddBlock of addBlockPayload: AddBlockPayload
+    | StartEditing of blockIdx: int
+    | BlockChange of BlockChange
 
 [<Struct>]
 type Connection = {
@@ -120,6 +135,7 @@ type State = {
     PointerLocation: Point
     Connections: Set<Connection>
     AddElementMenuLocation: Point
+    EditBlock: int option
 }
 
 module State =
@@ -148,13 +164,37 @@ module State =
         Connections = Set.empty
         PointerLocation = Point (0.0, 0.0)
         AddElementMenuLocation = Point (0.0, 0.0)
+        EditBlock = None
     }
 
     let update (msg: Msg) (state: State) : State =
         match msg with
         | Msg.Escape ->
             { state with
-                PointerState = PointerState.Neutral }
+                PointerState = PointerState.Neutral
+                EditBlock = None }
+
+        | Msg.StartEditing blockIdx ->
+            { state with
+                EditBlock = Some blockIdx }
+
+        | Msg.BlockChange blockChange ->
+            match blockChange with
+            | BlockChange.Buffer bufferChange ->
+                match bufferChange with
+                | BufferChange.InitialVolume(bufferId, newInitialVolume) ->
+                    state.Blocks.BufferAttrs[bufferId] <- { state.Blocks.BufferAttrs[bufferId] with InitialVolume = newInitialVolume }
+                    state
+
+                | BufferChange.Capacity(bufferId, newCapacity) ->
+                    state.Blocks.BufferAttrs[bufferId] <- { state.Blocks.BufferAttrs[bufferId] with Capacity =  newCapacity }
+                    state
+
+            | BlockChange.Constraint constraintChange ->
+                match constraintChange with
+                | ConstraintChange.Limit(constraintId, newLimit) ->
+
+                    state
 
         | Msg.AddBlock addBlockPayload ->
             match addBlockPayload.AddBlockType with
