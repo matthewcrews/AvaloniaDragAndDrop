@@ -150,25 +150,25 @@ module State =
         PointerState = PointerState.Neutral
         Blocks =
             {
-                Count = 2
+                Count = 0
                 Locations = [|
-                    Point (10.0, 10.0)
-                    Point (10.0, 100.0)
+                    // Point (10.0, 10.0)
+                    // Point (10.0, 100.0)
                 |]
                 Types = [|
-                    BlockType.Buffer 0
-                    BlockType.Constraint 0
+                    // BlockType.Buffer 0
+                    // BlockType.Constraint 0
                 |]
                 BufferAttrs = [|
-                    {
-                        Capacity = 100.0
-                        InitialVolume = 100.0
-                    }
+                    // {
+                    //     Capacity = 100.0
+                    //     InitialVolume = 100.0
+                    // }
                 |]
                 ConstraintAttrs = [|
-                    {
-                        Limit = 10.0
-                    }
+                    // {
+                    //     Limit = 10.0
+                    // }
                 |]
             }
         Connections = Set.empty
@@ -218,7 +218,7 @@ module State =
                                 Types = Array.add (BlockType.Buffer bufferId) state.Blocks.Types
                                 Locations = Array.add addBlockPayload.Location state.Blocks.Locations } }
             | AddBlockType.Constraint ->
-                let constraintId, nextIds = NextIds.nextBufferId state.NextIds
+                let constraintId, nextIds = NextIds.nextConstraintId state.NextIds
                 { state with
                     NextIds = nextIds
                     PointerState = PointerState.Neutral
@@ -241,10 +241,12 @@ module State =
                     { state with
                         PointerState = PointerState.Dragging blockIdx
                         PointerLocation = position }
-                | Selection.Output blockIdx
-                | Selection.Input blockIdx ->
+                | Selection.Output blockIdx ->
                     { state with
                         PointerState = PointerState.ConnectingOutput blockIdx }
+                | Selection.Input blockIdx ->
+                    { state with
+                        PointerState = PointerState.ConnectingInput blockIdx }
 
             | PointerState.ConnectingOutput sourceBlockIdx ->
                 match selection with

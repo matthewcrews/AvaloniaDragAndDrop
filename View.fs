@@ -38,27 +38,32 @@ module Dims =
 
 let inputAnchor dispatch blockIdx =
     Button.create [
+        // Button.name $"Input{blockIdx}"
         Button.width Dims.Anchor.width
         Button.height Dims.Anchor.height
         Button.background Dims.Anchor.color
         Button.onPointerReleased (fun e ->
             e.Handled <- true
-            Msg.Selection (Selection.Input blockIdx) |> dispatch)
+            Msg.Selection (Selection.Input blockIdx)
+            |> dispatch)
     ]
 
 let outputAnchor dispatch blockIdx =
     Button.create [
+        // Button.name $"Output{blockIdx}"
         Button.width Dims.Anchor.width
         Button.height Dims.Anchor.height
         Button.background Dims.Anchor.color
         Button.onPointerReleased (fun e ->
             e.Handled <- true
-            Msg.Selection (Selection.Output blockIdx) |> dispatch)
+            Msg.Selection (Selection.Output blockIdx)
+            |> dispatch)
     ]
 
 
 let buffer dispatch (location: Point) (blockIdx: int) =
     DockPanel.create [
+        // DockPanel.name $"Buffer{blockIdx}"
         DockPanel.top location.Y
         DockPanel.left location.X
         DockPanel.children [
@@ -88,6 +93,7 @@ let buffer dispatch (location: Point) (blockIdx: int) =
 
 let constraint dispatch (location: Point) (blockIdx: int) =
     DockPanel.create [
+        // DockPanel.name $"Constraint{blockIdx}"
         DockPanel.top location.Y
         DockPanel.left location.X
         DockPanel.children [
@@ -118,11 +124,12 @@ let constraint dispatch (location: Point) (blockIdx: int) =
     ]
 
 let view (state: State) (dispatch) =
-    let canvasName = "DiagramCanvas"
+    let canvasName = $"DiagramCanvas"
     Canvas.create [
         Canvas.name canvasName
         Canvas.background "DarkSlateGray"
         Canvas.onKeyUp (fun e ->
+            e.Handled <- true
             if e.Key = Key.Escape then
                 Msg.Escape |> dispatch)
         Canvas.onPointerMoved (fun e ->
@@ -148,12 +155,30 @@ let view (state: State) (dispatch) =
             match state.PointerState with
             | PointerState.ConnectingOutput blockIdx ->
                 let location = state.Blocks.Locations[blockIdx]
+                // let t = Shapes.Polyline()
+                // t.Points <- [|Point (0.0,0.0); Point (2.0, 2.0); Point (0.0, 4.0)|]
+                // t.Fill <- Brushes.Violet
+                // // t.Stroke <- Brush."Green"
                 Line.create [
                     Line.startPoint (location + (Point (100.0, 25.0)))
                     Line.endPoint state.PointerLocation
                     Line.stroke Dims.Line.color
                     Line.strokeThickness 2.0
                 ]
+                Canvas.create [
+                    Canvas.top 200.0
+                    Canvas.left 200.0
+                    Canvas.width 1.0
+                    Canvas.height 1.0
+                    Canvas.children [
+                        Path.create [
+                            Path.fill "black"
+                            Path.data "M8,5.14V19.14L19,12.14L8,5.14Z"
+                            Path.stretch Stretch.Uniform
+                        ]
+                    ]
+                ]
+
 
             | PointerState.ConnectingInput blockIdx ->
                 let location = state.Blocks.Locations[blockIdx]
