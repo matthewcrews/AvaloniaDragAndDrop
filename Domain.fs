@@ -151,25 +151,10 @@ module State =
         Blocks =
             {
                 Count = 0
-                Locations = [|
-                    // Point (10.0, 10.0)
-                    // Point (10.0, 100.0)
-                |]
-                Types = [|
-                    // BlockType.Buffer 0
-                    // BlockType.Constraint 0
-                |]
-                BufferAttrs = [|
-                    // {
-                    //     Capacity = 100.0
-                    //     InitialVolume = 100.0
-                    // }
-                |]
-                ConstraintAttrs = [|
-                    // {
-                    //     Limit = 10.0
-                    // }
-                |]
+                Locations = Array.empty
+                Types = Array.empty
+                BufferAttrs = Array.empty
+                ConstraintAttrs = Array.empty
             }
         Connections = Set.empty
         PointerLocation = Point (0.0, 0.0)

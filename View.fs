@@ -284,9 +284,7 @@ let view (state: State) (dispatch) =
                                     Msg.BlockChange (BlockChange.Constraint (ConstraintChange.Limit (constraintId, float e)))
                                     |> dispatch)
                             ]
+                    ]
                 ]
-                ]
-
-
         ]
     ]
