@@ -62,66 +62,68 @@ let outputAnchor dispatch blockIdx =
 
 
 let buffer dispatch (location: Point) (blockIdx: int) =
-    DockPanel.create [
-        // DockPanel.name $"Buffer{blockIdx}"
-        DockPanel.top location.Y
-        DockPanel.left location.X
-        DockPanel.children [
-            inputAnchor dispatch blockIdx
-            Button.create [
-                Button.width Dims.Block.width
-                Button.height Dims.Block.height
-                Button.background Dims.Buffer.color
-                Button.onPointerPressed (fun e ->
-                    e.Handled <- true
-                    let newPointerLocation = e.GetPosition null
-                    Msg.Selection (Selection.Block (blockIdx, newPointerLocation)) |> dispatch)
-                Button.onPointerReleased (fun e ->
-                    e.Handled <- true
-                    Msg.Deselection (Deselection.Block blockIdx) |> dispatch)
-                Button.onPointerMoved (fun e ->
-                    e.Handled <- true
-                    let newPointerLocation = e.GetPosition null
-                    Msg.Move newPointerLocation |> dispatch)
-                Button.onDoubleTapped (fun e ->
-                    e.Handled <- true
-                    Msg.StartEditing blockIdx |> dispatch)
+    View.createWithKey $"Buffer{blockIdx}"
+        DockPanel.create [
+            // DockPanel.name $"Buffer{blockIdx}"
+            DockPanel.top location.Y
+            DockPanel.left location.X
+            DockPanel.children [
+                inputAnchor dispatch blockIdx
+                Button.create [
+                    Button.width Dims.Block.width
+                    Button.height Dims.Block.height
+                    Button.background Dims.Buffer.color
+                    Button.onPointerPressed (fun e ->
+                        e.Handled <- true
+                        let newPointerLocation = e.GetPosition null
+                        Msg.Selection (Selection.Block (blockIdx, newPointerLocation)) |> dispatch)
+                    Button.onPointerReleased (fun e ->
+                        e.Handled <- true
+                        Msg.Deselection (Deselection.Block blockIdx) |> dispatch)
+                    Button.onPointerMoved (fun e ->
+                        e.Handled <- true
+                        let newPointerLocation = e.GetPosition null
+                        Msg.Move newPointerLocation |> dispatch)
+                    Button.onDoubleTapped (fun e ->
+                        e.Handled <- true
+                        Msg.StartEditing blockIdx |> dispatch)
+                ]
+                outputAnchor dispatch blockIdx
             ]
-            outputAnchor dispatch blockIdx
         ]
-    ]
 
 let constraint dispatch (location: Point) (blockIdx: int) =
-    DockPanel.create [
-        // DockPanel.name $"Constraint{blockIdx}"
-        DockPanel.top location.Y
-        DockPanel.left location.X
-        DockPanel.children [
-            inputAnchor dispatch blockIdx
-            Button.create [
-                Button.top location.Y
-                Button.left location.X
-                Button.width Dims.Block.width
-                Button.height Dims.Block.height
-                Button.background Dims.Constraint.color
-                Button.onPointerPressed (fun e ->
-                    e.Handled <- true
-                    let newPointerLocation = e.GetPosition null
-                    Msg.Selection (Selection.Block (blockIdx, newPointerLocation)) |> dispatch)
-                Button.onPointerReleased (fun e ->
-                    e.Handled <- true
-                    Msg.Deselection (Deselection.Block blockIdx) |> dispatch)
-                Button.onPointerMoved (fun e ->
-                    e.Handled <- true
-                    let newPointerLocation = e.GetPosition null
-                    Msg.Move newPointerLocation |> dispatch)
-                Button.onDoubleTapped (fun e ->
-                    e.Handled <- true
-                    Msg.StartEditing blockIdx |> dispatch)
+    View.createWithKey $"Constraint{blockIdx}"
+        DockPanel.create [
+            // DockPanel.name $"Constraint{blockIdx}"
+            DockPanel.top location.Y
+            DockPanel.left location.X
+            DockPanel.children [
+                inputAnchor dispatch blockIdx
+                Button.create [
+                    Button.top location.Y
+                    Button.left location.X
+                    Button.width Dims.Block.width
+                    Button.height Dims.Block.height
+                    Button.background Dims.Constraint.color
+                    Button.onPointerPressed (fun e ->
+                        e.Handled <- true
+                        let newPointerLocation = e.GetPosition null
+                        Msg.Selection (Selection.Block (blockIdx, newPointerLocation)) |> dispatch)
+                    Button.onPointerReleased (fun e ->
+                        e.Handled <- true
+                        Msg.Deselection (Deselection.Block blockIdx) |> dispatch)
+                    Button.onPointerMoved (fun e ->
+                        e.Handled <- true
+                        let newPointerLocation = e.GetPosition null
+                        Msg.Move newPointerLocation |> dispatch)
+                    Button.onDoubleTapped (fun e ->
+                        e.Handled <- true
+                        Msg.StartEditing blockIdx |> dispatch)
+                ]
+                outputAnchor dispatch blockIdx
             ]
-            outputAnchor dispatch blockIdx
         ]
-    ]
 
 let view (state: State) (dispatch) =
     let canvasName = $"DiagramCanvas"

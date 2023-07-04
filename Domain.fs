@@ -124,8 +124,8 @@ type NextIds =
     }
     static member Zero =
         {
-            Buffer = 0
-            Constraint = 0
+            Buffer = -1
+            Constraint = -1
         }
     static member nextBufferId nextIds =
         nextIds.Buffer + 1, { nextIds with Buffer = nextIds.Buffer + 1 }
@@ -216,7 +216,8 @@ module State =
                     Blocks = { state.Blocks with
                                 Count = state.Blocks.Count + 1
                                 Types = Array.add (BlockType.Buffer bufferId) state.Blocks.Types
-                                Locations = Array.add addBlockPayload.Location state.Blocks.Locations } }
+                                Locations = Array.add addBlockPayload.Location state.Blocks.Locations
+                                BufferAttrs = Array.add { InitialVolume = 100.0; Capacity = 100.0 } state.Blocks.BufferAttrs } }
             | AddBlockType.Constraint ->
                 let constraintId, nextIds = NextIds.nextConstraintId state.NextIds
                 { state with
@@ -225,7 +226,8 @@ module State =
                     Blocks = { state.Blocks with
                                 Count = state.Blocks.Count + 1
                                 Types = Array.add (BlockType.Constraint constraintId) state.Blocks.Types
-                                Locations = Array.add addBlockPayload.Location state.Blocks.Locations } }
+                                Locations = Array.add addBlockPayload.Location state.Blocks.Locations
+                                ConstraintAttrs = Array.add { Limit = 1.0 } state.Blocks.ConstraintAttrs }}
 
 
         | Msg.RequestAddItem pointerLocation ->
