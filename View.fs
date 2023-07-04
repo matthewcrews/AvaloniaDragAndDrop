@@ -38,7 +38,6 @@ module Dims =
 
 let inputAnchor dispatch blockIdx =
     Button.create [
-        // Button.name $"Input{blockIdx}"
         Button.width Dims.Anchor.width
         Button.height Dims.Anchor.height
         Button.background Dims.Anchor.color
@@ -50,7 +49,6 @@ let inputAnchor dispatch blockIdx =
 
 let outputAnchor dispatch blockIdx =
     Button.create [
-        // Button.name $"Output{blockIdx}"
         Button.width Dims.Anchor.width
         Button.height Dims.Anchor.height
         Button.background Dims.Anchor.color
@@ -61,10 +59,9 @@ let outputAnchor dispatch blockIdx =
     ]
 
 
-let buffer dispatch (location: Point) (blockIdx: int) =
+let buffer dispatch (location: Point) (name: string) (blockIdx: int) =
     View.createWithKey $"Buffer{blockIdx}"
         DockPanel.create [
-            // DockPanel.name $"Buffer{blockIdx}"
             DockPanel.top location.Y
             DockPanel.left location.X
             DockPanel.children [
@@ -72,6 +69,7 @@ let buffer dispatch (location: Point) (blockIdx: int) =
                 Button.create [
                     Button.width Dims.Block.width
                     Button.height Dims.Block.height
+                    Button.content name
                     Button.background Dims.Buffer.color
                     Button.onPointerPressed (fun e ->
                         e.Handled <- true
@@ -92,10 +90,9 @@ let buffer dispatch (location: Point) (blockIdx: int) =
             ]
         ]
 
-let constraint dispatch (location: Point) (blockIdx: int) =
+let constraint dispatch (location: Point) (name: string) (blockIdx: int) =
     View.createWithKey $"Constraint{blockIdx}"
         DockPanel.create [
-            // DockPanel.name $"Constraint{blockIdx}"
             DockPanel.top location.Y
             DockPanel.left location.X
             DockPanel.children [
@@ -103,6 +100,7 @@ let constraint dispatch (location: Point) (blockIdx: int) =
                 Button.create [
                     Button.top location.Y
                     Button.left location.X
+                    Button.content name
                     Button.width Dims.Block.width
                     Button.height Dims.Block.height
                     Button.background Dims.Constraint.color
@@ -157,35 +155,32 @@ let view (state: State) (dispatch) =
             match state.PointerState with
             | PointerState.ConnectingOutput blockIdx ->
                 let location = state.Blocks.Locations[blockIdx]
-                // let t = Shapes.Polyline()
-                // t.Points <- [|Point (0.0,0.0); Point (2.0, 2.0); Point (0.0, 4.0)|]
-                // t.Fill <- Brushes.Violet
-                // // t.Stroke <- Brush."Green"
                 Line.create [
-                    Line.startPoint (location + (Point (100.0, 25.0)))
+                    Line.startPoint (location + (Point (120.0, 25.0)))
                     Line.endPoint state.PointerLocation
                     Line.stroke Dims.Line.color
                     Line.strokeThickness 2.0
                 ]
-                Canvas.create [
-                    Canvas.top 200.0
-                    Canvas.left 200.0
-                    Canvas.width 1.0
-                    Canvas.height 1.0
-                    Canvas.children [
-                        Path.create [
-                            Path.fill "black"
-                            Path.data "M8,5.14V19.14L19,12.14L8,5.14Z"
-                            Path.stretch Stretch.Uniform
-                        ]
-                    ]
-                ]
+                // Drawing triangle
+                // Canvas.create [
+                //     Canvas.top 200.0
+                //     Canvas.left 200.0
+                //     Canvas.width 1.0
+                //     Canvas.height 1.0
+                //     Canvas.children [
+                //         Path.create [
+                //             Path.fill "black"
+                //             Path.data "M8,5.14V19.14L19,12.14L8,5.14Z"
+                //             Path.stretch Stretch.Uniform
+                //         ]
+                //     ]
+                // ]
 
 
             | PointerState.ConnectingInput blockIdx ->
                 let location = state.Blocks.Locations[blockIdx]
                 Line.create [
-                    Line.startPoint location
+                    Line.startPoint (location + (Point (0.0, 25.0)))
                     Line.endPoint state.PointerLocation
                     Line.stroke Dims.Line.color
                     Line.strokeThickness 2.0
@@ -197,8 +192,8 @@ let view (state: State) (dispatch) =
                 let sourceLocation = state.Blocks.Locations[connection.Source]
                 let targetLocation = state.Blocks.Locations[connection.Target]
                 Line.create [
-                    Line.startPoint (sourceLocation + (Point (100.0, 25.0)))
-                    Line.endPoint targetLocation
+                    Line.startPoint (sourceLocation + (Point (120.0, 25.0)))
+                    Line.endPoint (targetLocation + (Point (0.0, 25.0)))
                     Line.stroke "Green"
                     Line.strokeThickness 2.0
                 ]
@@ -207,10 +202,12 @@ let view (state: State) (dispatch) =
                 let location = state.Blocks.Locations[blockIdx]
                 match state.Blocks.Types[blockIdx] with
                 | BlockType.Buffer bufferId ->
-                    buffer dispatch location blockIdx
+                    let bufferName = state.Blocks.Names[blockIdx]
+                    buffer dispatch location bufferName blockIdx
 
                 | BlockType.Constraint constraintId ->
-                    constraint dispatch location blockIdx
+                    let constraintName = state.Blocks.Names[blockIdx]
+                    constraint dispatch location constraintName blockIdx
 
             match state.PointerState with
             | PointerState.AddingElement ->
