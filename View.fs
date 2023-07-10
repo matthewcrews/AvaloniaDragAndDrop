@@ -36,36 +36,36 @@ module Dims =
         let color = "Yellow"
 
 
-let inputAnchor dispatch blockIdx =
+let inputAnchor dispatch blockId =
     Button.create [
         Button.width Dims.Anchor.width
         Button.height Dims.Anchor.height
         Button.background Dims.Anchor.color
         Button.onPointerReleased (fun e ->
             e.Handled <- true
-            Msg.Selection (Selection.Input blockIdx)
+            Msg.Selection (Selection.Input blockId)
             |> dispatch)
     ]
 
-let outputAnchor dispatch blockIdx =
+let outputAnchor dispatch blockId =
     Button.create [
         Button.width Dims.Anchor.width
         Button.height Dims.Anchor.height
         Button.background Dims.Anchor.color
         Button.onPointerReleased (fun e ->
             e.Handled <- true
-            Msg.Selection (Selection.Output blockIdx)
+            Msg.Selection (Selection.Output blockId)
             |> dispatch)
     ]
 
 
-let buffer dispatch (location: Point) (name: string) (blockIdx: int) =
-    View.createWithKey $"Buffer{blockIdx}"
+let buffer dispatch (location: Point) (name: string) (blockId: BlockId) =
+    View.createWithKey $"Buffer{blockId}"
         DockPanel.create [
             DockPanel.top location.Y
             DockPanel.left location.X
             DockPanel.children [
-                inputAnchor dispatch blockIdx
+                inputAnchor dispatch blockId
                 Button.create [
                     Button.width Dims.Block.width
                     Button.height Dims.Block.height
@@ -74,29 +74,29 @@ let buffer dispatch (location: Point) (name: string) (blockIdx: int) =
                     Button.onPointerPressed (fun e ->
                         e.Handled <- true
                         let newPointerLocation = e.GetPosition null
-                        Msg.Selection (Selection.Block (blockIdx, newPointerLocation)) |> dispatch)
+                        Msg.Selection (Selection.Block (blockId, newPointerLocation)) |> dispatch)
                     Button.onPointerReleased (fun e ->
                         e.Handled <- true
-                        Msg.Deselection (Deselection.Block blockIdx) |> dispatch)
+                        Msg.Deselection (Deselection.Block blockId) |> dispatch)
                     Button.onPointerMoved (fun e ->
                         e.Handled <- true
                         let newPointerLocation = e.GetPosition null
                         Msg.Move newPointerLocation |> dispatch)
                     Button.onDoubleTapped (fun e ->
                         e.Handled <- true
-                        Msg.StartEditing blockIdx |> dispatch)
+                        Msg.StartEditing blockId |> dispatch)
                 ]
-                outputAnchor dispatch blockIdx
+                outputAnchor dispatch blockId
             ]
         ]
 
-let constraint dispatch (location: Point) (name: string) (blockIdx: int) =
-    View.createWithKey $"Constraint{blockIdx}"
+let constraint dispatch (location: Point) (name: string) (blockId: BlockId) =
+    View.createWithKey $"Constraint{blockId}"
         DockPanel.create [
             DockPanel.top location.Y
             DockPanel.left location.X
             DockPanel.children [
-                inputAnchor dispatch blockIdx
+                inputAnchor dispatch blockId
                 Button.create [
                     Button.top location.Y
                     Button.left location.X
@@ -107,24 +107,24 @@ let constraint dispatch (location: Point) (name: string) (blockIdx: int) =
                     Button.onPointerPressed (fun e ->
                         e.Handled <- true
                         let newPointerLocation = e.GetPosition null
-                        Msg.Selection (Selection.Block (blockIdx, newPointerLocation)) |> dispatch)
+                        Msg.Selection (Selection.Block (blockId, newPointerLocation)) |> dispatch)
                     Button.onPointerReleased (fun e ->
                         e.Handled <- true
-                        Msg.Deselection (Deselection.Block blockIdx) |> dispatch)
+                        Msg.Deselection (Deselection.Block blockId) |> dispatch)
                     Button.onPointerMoved (fun e ->
                         e.Handled <- true
                         let newPointerLocation = e.GetPosition null
                         Msg.Move newPointerLocation |> dispatch)
                     Button.onDoubleTapped (fun e ->
                         e.Handled <- true
-                        Msg.StartEditing blockIdx |> dispatch)
+                        Msg.StartEditing blockId |> dispatch)
                 ]
-                outputAnchor dispatch blockIdx
+                outputAnchor dispatch blockId
             ]
         ]
 
 let view (state: State) (dispatch) =
-    let canvasName = $"DiagramCanvas"
+    let canvasName = "DiagramCanvas"
     Canvas.create [
         Canvas.name canvasName
         Canvas.background "DarkSlateGray"
@@ -198,16 +198,16 @@ let view (state: State) (dispatch) =
                     Line.strokeThickness 2.0
                 ]
 
-            for blockIdx in 0..state.Blocks.Count - 1 do
-                let location = state.Blocks.Locations[blockIdx]
-                match state.Blocks.Types[blockIdx] with
+            // for blockIdx in 0..state.Blocks.Count - 1 do
+            for KeyValue (blockId, location) in state.Blocks.Locations do
+                match state.Blocks.Types[blockId] with
                 | BlockType.Buffer bufferId ->
-                    let bufferName = state.Blocks.Names[blockIdx]
-                    buffer dispatch location bufferName blockIdx
+                    let bufferName = state.Blocks.Names[blockId]
+                    buffer dispatch location bufferName blockId
 
                 | BlockType.Constraint constraintId ->
-                    let constraintName = state.Blocks.Names[blockIdx]
-                    constraint dispatch location constraintName blockIdx
+                    let constraintName = state.Blocks.Names[blockId]
+                    constraint dispatch location constraintName blockId
 
             match state.PointerState with
             | PointerState.AddingElement ->
@@ -239,8 +239,8 @@ let view (state: State) (dispatch) =
                 ()
 
             match state.EditBlock with
-            | None -> ()
-            | Some blockIdx ->
+            | ValueNone -> ()
+            | ValueSome blockIdx ->
                 let location = state.Blocks.Locations[blockIdx]
                 StackPanel.create [
                     StackPanel.background "Black"
@@ -250,7 +250,7 @@ let view (state: State) (dispatch) =
                     StackPanel.children [
                         match state.Blocks.Types[blockIdx] with
                         | BlockType.Buffer bufferId ->
-                            let bufferAttr = state.Blocks.BufferAttrs[bufferId]
+                            let bufferAttr = state.Blocks.Attributes.Buffer[bufferId]
                             TextBlock.create [
                                 TextBlock.text "Capacity"
                             ]
@@ -271,7 +271,7 @@ let view (state: State) (dispatch) =
                             ]
 
                         | BlockType.Constraint constraintId ->
-                            let constraintAttr = state.Blocks.ConstraintAttrs[constraintId]
+                            let constraintAttr = state.Blocks.Attributes.Constraints[constraintId]
                             TextBlock.create [
                                 TextBlock.text "Limit"
                             ]
@@ -279,6 +279,48 @@ let view (state: State) (dispatch) =
                                 TextBox.text (string constraintAttr.Limit)
                                 TextBox.onTextChanged (fun e ->
                                     Msg.BlockChange (BlockChange.Constraint (ConstraintChange.Limit (constraintId, float e)))
+                                    |> dispatch)
+                            ]
+
+                        | BlockType.Conversion conversionId ->
+                            let conversionAttr = state.Blocks.Attributes.Conversions[conversionId]
+                            TextBlock.create [
+                                TextBlock.text "Coefficient"
+                            ]
+                            TextBox.create [
+                                TextBox.text (string conversionAttr.Coefficient)
+                                TextBox.onTextChanged (fun e ->
+                                    Msg.BlockChange (BlockChange.Conversion (ConversionChange.Coefficient (conversionId, float e)))
+                                    |> dispatch)
+                            ]
+
+                        | BlockType.Conveyor conveyorId ->
+                            let conveyorAttr = state.Blocks.Attributes.Conveyors[conveyorId]
+                            TextBlock.create [
+                                TextBlock.text "Height"
+                            ]
+                            TextBox.create [
+                                TextBox.text (string conveyorAttr.Height)
+                                TextBox.onTextChanged (fun e ->
+                                    Msg.BlockChange (BlockChange.Conveyor (ConveyorChange.Height (conveyorId, float e)))
+                                    |> dispatch)
+                            ]
+                            TextBlock.create [
+                                TextBlock.text "Length"
+                            ]
+                            TextBox.create [
+                                TextBox.text (string conveyorAttr.Length)
+                                TextBox.onTextChanged (fun e ->
+                                    Msg.BlockChange (BlockChange.Conveyor (ConveyorChange.Length (conveyorId, float e)))
+                                    |> dispatch)
+                            ]
+                            TextBlock.create [
+                                TextBlock.text "Max Velocity"
+                            ]
+                            TextBox.create [
+                                TextBox.text (string conveyorAttr.MaxVelocity)
+                                TextBox.onTextChanged (fun e ->
+                                    Msg.BlockChange (BlockChange.Conveyor (ConveyorChange.MaxVelocity (conveyorId, float e)))
                                     |> dispatch)
                             ]
                     ]
