@@ -290,22 +290,32 @@ let view (state: State) (dispatch) =
                 let newPointerLocation = e.GetPosition null
                 Msg.Move newPointerLocation |> dispatch)
         Canvas.onPointerReleased (fun e ->
-            let source : Control = e.Source :?> Control
-            if source.Name = canvasName then
+            if e.InitialPressMouseButton = MouseButton.Middle then
                 e.Handled <- true
-                if e.InitialPressMouseButton = MouseButton.Right then
-                    let newPointerLocation = e.GetPosition null
-                    Msg.RequestAddItem newPointerLocation |> dispatch
-                elif e.InitialPressMouseButton = MouseButton.Left then
-                    Msg.Escape |> dispatch
-                else
-                    ()
+                Msg.PanningStopped |> dispatch
+            else
+
+                let source : Control = e.Source :?> Control
+                if source.Name = canvasName then
+                    e.Handled <- true
+                    if e.InitialPressMouseButton = MouseButton.Right then
+                        let newPointerLocation = e.GetPosition null
+                        Msg.RequestAddItem newPointerLocation |> dispatch
+                    elif e.InitialPressMouseButton = MouseButton.Left then
+                        Msg.Escape |> dispatch
+                    else
+                        ()
+            )
+        Canvas.onPointerPressed (fun e ->
+            let point = e.GetCurrentPoint null
+            if point.Properties.IsMiddleButtonPressed then
+                Msg.PanningStarted |> dispatch
             )
 
         Canvas.children [
             match state.PointerState with
             | PointerState.ConnectingOutput blockIdx ->
-                let location = state.Blocks.Locations[blockIdx]
+                let location = state.Blocks.Locations[blockIdx] + state.WindowPosition
                 Line.create [
                     Line.startPoint (location + (Point (120.0, 25.0)))
                     Line.endPoint state.PointerLocation
@@ -329,7 +339,7 @@ let view (state: State) (dispatch) =
 
 
             | PointerState.ConnectingInput blockIdx ->
-                let location = state.Blocks.Locations[blockIdx]
+                let location = state.Blocks.Locations[blockIdx] + state.WindowPosition
                 Line.create [
                     Line.startPoint (location + (Point (0.0, 25.0)))
                     Line.endPoint state.PointerLocation
@@ -340,8 +350,8 @@ let view (state: State) (dispatch) =
             | _ -> ()
 
             for connection in state.Connections do
-                let sourceLocation = state.Blocks.Locations[connection.Source]
-                let targetLocation = state.Blocks.Locations[connection.Target]
+                let sourceLocation = state.Blocks.Locations[connection.Source] + state.WindowPosition
+                let targetLocation = state.Blocks.Locations[connection.Target] + state.WindowPosition
                 Line.create [
                     Line.startPoint (sourceLocation + (Point (120.0, 25.0)))
                     Line.endPoint (targetLocation + (Point (0.0, 25.0)))
@@ -352,6 +362,7 @@ let view (state: State) (dispatch) =
             // for blockIdx in 0..state.Blocks.Count - 1 do
             for KeyValue (blockId, location) in state.Blocks.Locations do
                 let name = state.Blocks.Names[blockId]
+                let location = location + state.WindowPosition
 
                 match state.Blocks.Types[blockId] with
                 | BlockType.Buffer bufferId ->
@@ -375,10 +386,11 @@ let view (state: State) (dispatch) =
 
             match state.PointerState with
             | PointerState.AddingElement ->
+                let location = state.AddElementMenuLocation
                 StackPanel.create [
                     StackPanel.orientation Orientation.Vertical
-                    StackPanel.left state.AddElementMenuLocation.X
-                    StackPanel.top state.AddElementMenuLocation.Y
+                    StackPanel.left location.X
+                    StackPanel.top location.Y
                     StackPanel.children [
                         Button.create [
                             Button.content "Buffer"
@@ -386,7 +398,7 @@ let view (state: State) (dispatch) =
                             Button.height 30.0
                             Button.onClick (fun e ->
                                 e.Handled <- true
-                                Msg.AddBlock { AddBlockType = AddBlockType.Buffer; Location = state.AddElementMenuLocation } |> dispatch)
+                                Msg.AddBlock { AddBlockType = AddBlockType.Buffer; Location = state.PointerLocation - state.WindowPosition } |> dispatch)
                         ]
                         Button.create [
                             Button.content "Constraint"
@@ -394,7 +406,7 @@ let view (state: State) (dispatch) =
                             Button.height 30.0
                             Button.onClick (fun e ->
                                 e.Handled <- true
-                                Msg.AddBlock { AddBlockType = AddBlockType.Constraint; Location = state.AddElementMenuLocation } |> dispatch)
+                                Msg.AddBlock { AddBlockType = AddBlockType.Constraint; Location = state.PointerLocation - state.WindowPosition} |> dispatch)
                         ]
                         Button.create [
                             Button.content "Conversion"
@@ -402,7 +414,7 @@ let view (state: State) (dispatch) =
                             Button.height 30.0
                             Button.onClick (fun e ->
                                 e.Handled <- true
-                                Msg.AddBlock { AddBlockType = AddBlockType.Conversion; Location = state.AddElementMenuLocation } |> dispatch)
+                                Msg.AddBlock { AddBlockType = AddBlockType.Conversion; Location = state.PointerLocation - state.WindowPosition} |> dispatch)
                         ]
                         Button.create [
                             Button.content "Conveyor"
@@ -410,7 +422,7 @@ let view (state: State) (dispatch) =
                             Button.height 30.0
                             Button.onClick (fun e ->
                                 e.Handled <- true
-                                Msg.AddBlock { AddBlockType = AddBlockType.Conveyor; Location = state.AddElementMenuLocation } |> dispatch)
+                                Msg.AddBlock { AddBlockType = AddBlockType.Conveyor; Location = state.PointerLocation - state.WindowPosition} |> dispatch)
                         ]
                         Button.create [
                             Button.content "Merge"
@@ -418,7 +430,7 @@ let view (state: State) (dispatch) =
                             Button.height 30.0
                             Button.onClick (fun e ->
                                 e.Handled <- true
-                                Msg.AddBlock { AddBlockType = AddBlockType.Merge; Location = state.AddElementMenuLocation } |> dispatch)
+                                Msg.AddBlock { AddBlockType = AddBlockType.Merge; Location = state.PointerLocation - state.WindowPosition} |> dispatch)
                         ]
                         Button.create [
                             Button.content "Split"
@@ -426,7 +438,7 @@ let view (state: State) (dispatch) =
                             Button.height 30.0
                             Button.onClick (fun e ->
                                 e.Handled <- true
-                                Msg.AddBlock { AddBlockType = AddBlockType.Split; Location = state.AddElementMenuLocation } |> dispatch)
+                                Msg.AddBlock { AddBlockType = AddBlockType.Split; Location = state.PointerLocation - state.WindowPosition } |> dispatch)
                         ]
                     ]
                 ]

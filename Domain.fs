@@ -161,6 +161,7 @@ type PointerState =
     | ConnectingOutput of blockId: BlockId
     | ConnectingInput of blockId: BlockId
     | AddingElement
+    | Panning
 
 
 type AddBlockType =
@@ -208,6 +209,8 @@ type Msg =
     | AddBlock of addBlockPayload: AddBlockPayload
     | StartEditing of blockId: BlockId
     | BlockChange of BlockChange
+    | PanningStarted
+    | PanningStopped
 
 [<Struct>]
 type Connection = {
@@ -268,22 +271,8 @@ type NextIds () =
 
 
 type State =
-
-    // member val NextIds = NextIds() with get
-    // member val PointerState = PointerState.Neutral with get, set
-    // member val Blocks = {
-    //         Count = 0
-    //         Names = Dictionary()
-    //         Locations = Dictionary()
-    //         Types = Dictionary()
-    //         Attributes = Attributes.init ()
-    //     } with get
-    // member val Connections = HashSet<Connection>() with get
-    // member val PointerLocation = Point (0.0, 0.0) with get, set
-    // member val AddElementMenuLocation = Point (0.0, 0.0) with get, set
-    // member val EditBlock : BlockId option = None with get, set
-
     {
+        WindowPosition: Point
         NextIds: NextIds
         PointerState: PointerState
         Blocks: Blocks
@@ -297,6 +286,7 @@ module State =
 
     let init () =
         {
+            WindowPosition = Point(0.0, 0.0)
             NextIds = NextIds()
             PointerState = PointerState.Neutral
             Blocks =
@@ -319,6 +309,15 @@ module State =
                 { state with
                     PointerState = PointerState.Neutral
                     EditBlock = ValueNone }
+
+            | Msg.PanningStarted ->
+                { state with
+                    PointerState = PointerState.Panning }
+
+            | Msg.PanningStopped ->
+                { state with
+                    PointerState = PointerState.Neutral  }
+
 
             | Msg.StartEditing blockIdx ->
                 { state with
@@ -491,6 +490,12 @@ module State =
                             PointerLocation = newPointerPoint }
                     newState.Blocks.Locations[blockIdx] <- state.Blocks.Locations[blockIdx] + delta
                     newState
+
+                | PointerState.Panning ->
+                    let delta = newPointerPoint - state.PointerLocation
+                    { state with
+                        PointerLocation = newPointerPoint
+                        WindowPosition = state.WindowPosition + delta }
 
                 | _ ->
                     { state with
