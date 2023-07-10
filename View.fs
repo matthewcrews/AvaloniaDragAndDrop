@@ -25,6 +25,22 @@ module Dims =
 
         let color = "Red"
 
+    module Conversion =
+
+        let color = "Yellow"
+
+    module Conveyor =
+
+        let color = "Bisque"
+
+    module Merge =
+
+        let color = "Magenta"
+
+    module Split =
+
+        let color = "SeaGreen"
+
     module Line =
 
         let color = "Green"
@@ -123,6 +139,141 @@ let constraint dispatch (location: Point) (name: string) (blockId: BlockId) =
             ]
         ]
 
+let conversion dispatch (location: Point) (name: string) (blockId: BlockId) =
+    View.createWithKey $"Conversion{blockId}"
+        DockPanel.create [
+            DockPanel.top location.Y
+            DockPanel.left location.X
+            DockPanel.children [
+                inputAnchor dispatch blockId
+                Button.create [
+                    Button.top location.Y
+                    Button.left location.X
+                    Button.content name
+                    Button.width Dims.Block.width
+                    Button.height Dims.Block.height
+                    Button.background Dims.Conversion.color
+                    Button.onPointerPressed (fun e ->
+                        e.Handled <- true
+                        let newPointerLocation = e.GetPosition null
+                        Msg.Selection (Selection.Block (blockId, newPointerLocation)) |> dispatch)
+                    Button.onPointerReleased (fun e ->
+                        e.Handled <- true
+                        Msg.Deselection (Deselection.Block blockId) |> dispatch)
+                    Button.onPointerMoved (fun e ->
+                        e.Handled <- true
+                        let newPointerLocation = e.GetPosition null
+                        Msg.Move newPointerLocation |> dispatch)
+                    Button.onDoubleTapped (fun e ->
+                        e.Handled <- true
+                        Msg.StartEditing blockId |> dispatch)
+                ]
+                outputAnchor dispatch blockId
+            ]
+        ]
+
+let conveyor dispatch (location: Point) (name: string) (blockId: BlockId) =
+    View.createWithKey $"Conversion{blockId}"
+        DockPanel.create [
+            DockPanel.top location.Y
+            DockPanel.left location.X
+            DockPanel.children [
+                inputAnchor dispatch blockId
+                Button.create [
+                    Button.top location.Y
+                    Button.left location.X
+                    Button.content name
+                    Button.width Dims.Block.width
+                    Button.height Dims.Block.height
+                    Button.background Dims.Conveyor.color
+                    Button.onPointerPressed (fun e ->
+                        e.Handled <- true
+                        let newPointerLocation = e.GetPosition null
+                        Msg.Selection (Selection.Block (blockId, newPointerLocation)) |> dispatch)
+                    Button.onPointerReleased (fun e ->
+                        e.Handled <- true
+                        Msg.Deselection (Deselection.Block blockId) |> dispatch)
+                    Button.onPointerMoved (fun e ->
+                        e.Handled <- true
+                        let newPointerLocation = e.GetPosition null
+                        Msg.Move newPointerLocation |> dispatch)
+                    Button.onDoubleTapped (fun e ->
+                        e.Handled <- true
+                        Msg.StartEditing blockId |> dispatch)
+                ]
+                outputAnchor dispatch blockId
+            ]
+        ]
+
+
+let merge dispatch (location: Point) (name: string) (blockId: BlockId) =
+    View.createWithKey $"Conversion{blockId}"
+        DockPanel.create [
+            DockPanel.top location.Y
+            DockPanel.left location.X
+            DockPanel.children [
+                inputAnchor dispatch blockId
+                Button.create [
+                    Button.top location.Y
+                    Button.left location.X
+                    Button.content name
+                    Button.width Dims.Block.width
+                    Button.height Dims.Block.height
+                    Button.background Dims.Merge.color
+                    Button.onPointerPressed (fun e ->
+                        e.Handled <- true
+                        let newPointerLocation = e.GetPosition null
+                        Msg.Selection (Selection.Block (blockId, newPointerLocation)) |> dispatch)
+                    Button.onPointerReleased (fun e ->
+                        e.Handled <- true
+                        Msg.Deselection (Deselection.Block blockId) |> dispatch)
+                    Button.onPointerMoved (fun e ->
+                        e.Handled <- true
+                        let newPointerLocation = e.GetPosition null
+                        Msg.Move newPointerLocation |> dispatch)
+                    Button.onDoubleTapped (fun e ->
+                        e.Handled <- true
+                        Msg.StartEditing blockId |> dispatch)
+                ]
+                outputAnchor dispatch blockId
+            ]
+        ]
+
+
+let split dispatch (location: Point) (name: string) (blockId: BlockId) =
+    View.createWithKey $"Conversion{blockId}"
+        DockPanel.create [
+            DockPanel.top location.Y
+            DockPanel.left location.X
+            DockPanel.children [
+                inputAnchor dispatch blockId
+                Button.create [
+                    Button.top location.Y
+                    Button.left location.X
+                    Button.content name
+                    Button.width Dims.Block.width
+                    Button.height Dims.Block.height
+                    Button.background Dims.Split.color
+                    Button.onPointerPressed (fun e ->
+                        e.Handled <- true
+                        let newPointerLocation = e.GetPosition null
+                        Msg.Selection (Selection.Block (blockId, newPointerLocation)) |> dispatch)
+                    Button.onPointerReleased (fun e ->
+                        e.Handled <- true
+                        Msg.Deselection (Deselection.Block blockId) |> dispatch)
+                    Button.onPointerMoved (fun e ->
+                        e.Handled <- true
+                        let newPointerLocation = e.GetPosition null
+                        Msg.Move newPointerLocation |> dispatch)
+                    Button.onDoubleTapped (fun e ->
+                        e.Handled <- true
+                        Msg.StartEditing blockId |> dispatch)
+                ]
+                outputAnchor dispatch blockId
+            ]
+        ]
+
+
 let view (state: State) (dispatch) =
     let canvasName = "DiagramCanvas"
     Canvas.create [
@@ -200,14 +351,27 @@ let view (state: State) (dispatch) =
 
             // for blockIdx in 0..state.Blocks.Count - 1 do
             for KeyValue (blockId, location) in state.Blocks.Locations do
+                let name = state.Blocks.Names[blockId]
+
                 match state.Blocks.Types[blockId] with
                 | BlockType.Buffer bufferId ->
-                    let bufferName = state.Blocks.Names[blockId]
-                    buffer dispatch location bufferName blockId
+                    buffer dispatch location name blockId
 
                 | BlockType.Constraint constraintId ->
-                    let constraintName = state.Blocks.Names[blockId]
-                    constraint dispatch location constraintName blockId
+                    constraint dispatch location name blockId
+
+                | BlockType.Conversion conversionId ->
+                    conversion dispatch location name blockId
+
+                | BlockType.Conveyor conveyorId ->
+                    conveyor dispatch location name blockId
+
+                | BlockType.Merge mergeId ->
+                    merge dispatch location name blockId
+
+                | BlockType.Split splitId ->
+                    split dispatch location name blockId
+
 
             match state.PointerState with
             | PointerState.AddingElement ->
@@ -231,6 +395,38 @@ let view (state: State) (dispatch) =
                             Button.onClick (fun e ->
                                 e.Handled <- true
                                 Msg.AddBlock { AddBlockType = AddBlockType.Constraint; Location = state.AddElementMenuLocation } |> dispatch)
+                        ]
+                        Button.create [
+                            Button.content "Conversion"
+                            Button.width 100.0
+                            Button.height 30.0
+                            Button.onClick (fun e ->
+                                e.Handled <- true
+                                Msg.AddBlock { AddBlockType = AddBlockType.Conversion; Location = state.AddElementMenuLocation } |> dispatch)
+                        ]
+                        Button.create [
+                            Button.content "Conveyor"
+                            Button.width 100.0
+                            Button.height 30.0
+                            Button.onClick (fun e ->
+                                e.Handled <- true
+                                Msg.AddBlock { AddBlockType = AddBlockType.Conveyor; Location = state.AddElementMenuLocation } |> dispatch)
+                        ]
+                        Button.create [
+                            Button.content "Merge"
+                            Button.width 100.0
+                            Button.height 30.0
+                            Button.onClick (fun e ->
+                                e.Handled <- true
+                                Msg.AddBlock { AddBlockType = AddBlockType.Merge; Location = state.AddElementMenuLocation } |> dispatch)
+                        ]
+                        Button.create [
+                            Button.content "Split"
+                            Button.width 100.0
+                            Button.height 30.0
+                            Button.onClick (fun e ->
+                                e.Handled <- true
+                                Msg.AddBlock { AddBlockType = AddBlockType.Split; Location = state.AddElementMenuLocation } |> dispatch)
                         ]
                     ]
                 ]

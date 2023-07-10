@@ -374,7 +374,6 @@ module State =
                     blocks.Types[newBlockId] <- BlockType.Buffer newBufferId
                     blocks.Locations[newBlockId] <- addBlockPayload.Location
                     blocks.Attributes.Buffer[newBufferId] <- { InitialVolume = 100.0; Capacity = 100.0 }
-                    state
 
                 | AddBlockType.Constraint ->
                     let newConstraintId = state.NextIds.NextConstraintId()
@@ -383,7 +382,6 @@ module State =
                     blocks.Types[newBlockId] <- BlockType.Constraint newConstraintId
                     blocks.Locations[newBlockId] <- addBlockPayload.Location
                     blocks.Attributes.Constraints[newConstraintId] <- { Limit = 1.0 }
-                    state
 
                 | AddBlockType.Conversion ->
                     let newConversionId = state.NextIds.NextConversionId()
@@ -392,7 +390,6 @@ module State =
                     blocks.Types[newBlockId] <- BlockType.Conversion newConversionId
                     blocks.Locations[newBlockId] <- addBlockPayload.Location
                     blocks.Attributes.Conversions[newConversionId] <- { Coefficient =  1.0 }
-                    state
 
                 | AddBlockType.Conveyor ->
                     let newConveyorId = state.NextIds.NextConveyorId()
@@ -401,7 +398,6 @@ module State =
                     blocks.Types[newBlockId] <- BlockType.Conveyor newConveyorId
                     blocks.Locations[newBlockId] <- addBlockPayload.Location
                     blocks.Attributes.Conveyors[newConveyorId] <- { Height = 1.0; Length = 1.0; MaxVelocity = 1.0 }
-                    state
 
                 | AddBlockType.Merge ->
                     let newMergeId = state.NextIds.NextMergeId()
@@ -410,7 +406,6 @@ module State =
                     blocks.Types[newBlockId] <- BlockType.Merge newMergeId
                     blocks.Locations[newBlockId] <- addBlockPayload.Location
                     blocks.Attributes.Merges[newMergeId] <- { Type = Attributes.MergeType.Priority Array.empty }
-                    state
 
                 | AddBlockType.Split ->
                     let newSplitId = state.NextIds.NextSplitId()
@@ -419,7 +414,8 @@ module State =
                     blocks.Types[newBlockId] <- BlockType.Split newSplitId
                     blocks.Locations[newBlockId] <- addBlockPayload.Location
                     blocks.Attributes.Splits[newSplitId] <- { Type = Attributes.SplitType.Priority Array.empty }
-                    state
+
+                { state with PointerState = PointerState.Neutral }
 
             | Msg.RequestAddItem pointerLocation ->
                 { state with
