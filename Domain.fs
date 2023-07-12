@@ -509,7 +509,7 @@ module State =
                     let newState =
                         { state with
                             PointerPosition = newPointerPoint }
-                    newState.Blocks.Locations[blockIdx] <- state.Blocks.Locations[blockIdx] + delta
+                    newState.Blocks.Locations[blockIdx] <- state.Blocks.Locations[blockIdx] + delta / state.Zoom
                     newState
 
                 | PointerState.Panning ->

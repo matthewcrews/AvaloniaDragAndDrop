@@ -52,10 +52,10 @@ module Dims =
         let color = "Yellow"
 
 
-let inputAnchor dispatch blockId =
+let inputAnchor dispatch (zoom: float) blockId =
     Button.create [
-        Button.width Dims.Anchor.width
-        Button.height Dims.Anchor.height
+        Button.width (Dims.Anchor.width * zoom)
+        Button.height (Dims.Anchor.height * zoom)
         Button.background Dims.Anchor.color
         Button.onPointerReleased (fun e ->
             e.Handled <- true
@@ -63,10 +63,10 @@ let inputAnchor dispatch blockId =
             |> dispatch)
     ]
 
-let outputAnchor dispatch blockId =
+let outputAnchor dispatch (zoom: float) blockId =
     Button.create [
-        Button.width Dims.Anchor.width
-        Button.height Dims.Anchor.height
+        Button.width (Dims.Anchor.width * zoom)
+        Button.height (Dims.Anchor.height * zoom)
         Button.background Dims.Anchor.color
         Button.onPointerReleased (fun e ->
             e.Handled <- true
@@ -75,14 +75,14 @@ let outputAnchor dispatch blockId =
     ]
 
 
-let buffer dispatch (origin: Point) (zoom: float)  (location: Point) (name: string) (blockId: BlockId) =
+let buffer dispatch (origin: Point) (zoom: float) (location: Point) (name: string) (blockId: BlockId) =
     let location = zoom * location + origin
     View.createWithKey $"Buffer{blockId}"
         DockPanel.create [
             DockPanel.top location.Y
             DockPanel.left location.X
             DockPanel.children [
-                inputAnchor dispatch blockId
+                inputAnchor dispatch zoom blockId
                 Button.create [
                     Button.width (Dims.Block.width * zoom)
                     Button.height (Dims.Block.height * zoom)
@@ -103,23 +103,24 @@ let buffer dispatch (origin: Point) (zoom: float)  (location: Point) (name: stri
                         e.Handled <- true
                         Msg.StartEditing blockId |> dispatch)
                 ]
-                outputAnchor dispatch blockId
+                outputAnchor dispatch zoom blockId
             ]
         ]
 
-let constraint dispatch (location: Point) (name: string) (blockId: BlockId) =
+let constraint dispatch (origin: Point) (zoom: float) (location: Point) (name: string) (blockId: BlockId) =
+    let location = zoom * location + origin
     View.createWithKey $"Constraint{blockId}"
         DockPanel.create [
             DockPanel.top location.Y
             DockPanel.left location.X
             DockPanel.children [
-                inputAnchor dispatch blockId
+                inputAnchor dispatch zoom blockId
                 Button.create [
                     Button.top location.Y
                     Button.left location.X
                     Button.content name
-                    Button.width Dims.Block.width
-                    Button.height Dims.Block.height
+                    Button.width (Dims.Block.width * zoom)
+                    Button.height (Dims.Block.height * zoom)
                     Button.background Dims.Constraint.color
                     Button.onPointerPressed (fun e ->
                         e.Handled <- true
@@ -136,23 +137,24 @@ let constraint dispatch (location: Point) (name: string) (blockId: BlockId) =
                         e.Handled <- true
                         Msg.StartEditing blockId |> dispatch)
                 ]
-                outputAnchor dispatch blockId
+                outputAnchor dispatch zoom blockId
             ]
         ]
 
-let conversion dispatch (location: Point) (name: string) (blockId: BlockId) =
+let conversion dispatch (origin: Point) (zoom: float) (location: Point) (name: string) (blockId: BlockId) =
+    let location = zoom * location + origin
     View.createWithKey $"Conversion{blockId}"
         DockPanel.create [
             DockPanel.top location.Y
             DockPanel.left location.X
             DockPanel.children [
-                inputAnchor dispatch blockId
+                inputAnchor dispatch zoom blockId
                 Button.create [
                     Button.top location.Y
                     Button.left location.X
                     Button.content name
-                    Button.width Dims.Block.width
-                    Button.height Dims.Block.height
+                    Button.width (Dims.Block.width * zoom)
+                    Button.height (Dims.Block.height * zoom)
                     Button.background Dims.Conversion.color
                     Button.onPointerPressed (fun e ->
                         e.Handled <- true
@@ -169,23 +171,24 @@ let conversion dispatch (location: Point) (name: string) (blockId: BlockId) =
                         e.Handled <- true
                         Msg.StartEditing blockId |> dispatch)
                 ]
-                outputAnchor dispatch blockId
+                outputAnchor dispatch zoom blockId
             ]
         ]
 
-let conveyor dispatch (location: Point) (name: string) (blockId: BlockId) =
+let conveyor dispatch (origin: Point) (zoom: float) (location: Point) (name: string) (blockId: BlockId) =
+    let location = zoom * location + origin
     View.createWithKey $"Conversion{blockId}"
         DockPanel.create [
             DockPanel.top location.Y
             DockPanel.left location.X
             DockPanel.children [
-                inputAnchor dispatch blockId
+                inputAnchor dispatch zoom blockId
                 Button.create [
                     Button.top location.Y
                     Button.left location.X
                     Button.content name
-                    Button.width Dims.Block.width
-                    Button.height Dims.Block.height
+                    Button.width (Dims.Block.width * zoom)
+                    Button.height (Dims.Block.height * zoom)
                     Button.background Dims.Conveyor.color
                     Button.onPointerPressed (fun e ->
                         e.Handled <- true
@@ -202,24 +205,25 @@ let conveyor dispatch (location: Point) (name: string) (blockId: BlockId) =
                         e.Handled <- true
                         Msg.StartEditing blockId |> dispatch)
                 ]
-                outputAnchor dispatch blockId
+                outputAnchor dispatch zoom blockId
             ]
         ]
 
 
-let merge dispatch (location: Point) (name: string) (blockId: BlockId) =
+let merge dispatch (origin: Point) (zoom: float) (location: Point) (name: string) (blockId: BlockId) =
+    let location = zoom * location + origin
     View.createWithKey $"Conversion{blockId}"
         DockPanel.create [
             DockPanel.top location.Y
             DockPanel.left location.X
             DockPanel.children [
-                inputAnchor dispatch blockId
+                inputAnchor dispatch zoom blockId
                 Button.create [
                     Button.top location.Y
                     Button.left location.X
                     Button.content name
-                    Button.width Dims.Block.width
-                    Button.height Dims.Block.height
+                    Button.width (Dims.Block.width * zoom)
+                    Button.height (Dims.Block.height * zoom)
                     Button.background Dims.Merge.color
                     Button.onPointerPressed (fun e ->
                         e.Handled <- true
@@ -236,24 +240,25 @@ let merge dispatch (location: Point) (name: string) (blockId: BlockId) =
                         e.Handled <- true
                         Msg.StartEditing blockId |> dispatch)
                 ]
-                outputAnchor dispatch blockId
+                outputAnchor dispatch zoom blockId
             ]
         ]
 
 
-let split dispatch (location: Point) (name: string) (blockId: BlockId) =
+let split dispatch (origin: Point) (zoom: float) (location: Point) (name: string) (blockId: BlockId) =
+    let location = zoom * location + origin
     View.createWithKey $"Conversion{blockId}"
         DockPanel.create [
             DockPanel.top location.Y
             DockPanel.left location.X
             DockPanel.children [
-                inputAnchor dispatch blockId
+                inputAnchor dispatch zoom blockId
                 Button.create [
                     Button.top location.Y
                     Button.left location.X
                     Button.content name
-                    Button.width Dims.Block.width
-                    Button.height Dims.Block.height
+                    Button.width (Dims.Block.width * zoom)
+                    Button.height (Dims.Block.height * zoom)
                     Button.background Dims.Split.color
                     Button.onPointerPressed (fun e ->
                         e.Handled <- true
@@ -270,7 +275,7 @@ let split dispatch (location: Point) (name: string) (blockId: BlockId) =
                         e.Handled <- true
                         Msg.StartEditing blockId |> dispatch)
                 ]
-                outputAnchor dispatch blockId
+                outputAnchor dispatch zoom blockId
             ]
         ]
 
@@ -280,6 +285,8 @@ let view (state: State) (dispatch) =
     Canvas.create [
         Canvas.name canvasName
         Canvas.background "DarkSlateGray"
+        Canvas.onKeyDown (fun e ->
+            printfn "KeyDown")
         Canvas.onKeyUp (fun e ->
             e.Handled <- true
             if e.Key = Key.Escape then
@@ -324,12 +331,16 @@ let view (state: State) (dispatch) =
         Canvas.children [
             match state.PointerState with
             | PointerState.ConnectingOutput blockIdx ->
-                let location = (state.Blocks.Locations[blockIdx] + state.WindowPosition) * state.Zoom
+                let location = state.Blocks.Locations[blockIdx] + (Point (120.0, 25.0))
                 Line.create [
-                    Line.startPoint (location + (Point (120.0, 25.0)))
+                    Line.startPoint (location * state.Zoom + state.WindowPosition)
                     Line.endPoint state.PointerPosition
                     Line.stroke Dims.Line.color
                     Line.strokeThickness 2.0
+                    Line.onKeyUp (fun e ->
+                        e.Handled <- true
+                        if e.Key = Key.Escape then
+                            Msg.Escape |> dispatch)
                 ]
                 // Drawing triangle
                 // Canvas.create [
@@ -348,9 +359,9 @@ let view (state: State) (dispatch) =
 
 
             | PointerState.ConnectingInput blockIdx ->
-                let location = state.Blocks.Locations[blockIdx] + state.WindowPosition
+                let location = state.Blocks.Locations[blockIdx] + (Point (0.0, 25.0))
                 Line.create [
-                    Line.startPoint ((location + (Point (0.0, 25.0))) * state.Zoom)
+                    Line.startPoint (location * state.Zoom + state.WindowPosition)
                     Line.endPoint state.PointerPosition
                     Line.stroke Dims.Line.color
                     Line.strokeThickness 2.0
@@ -359,11 +370,12 @@ let view (state: State) (dispatch) =
             | _ -> ()
 
             for connection in state.Connections do
-                let sourceLocation = state.Blocks.Locations[connection.Source] + state.WindowPosition
-                let targetLocation = state.Blocks.Locations[connection.Target] + state.WindowPosition
+                let sourceLocation = state.Blocks.Locations[connection.Source] + (Point (120.0, 25.0))
+                let targetLocation = state.Blocks.Locations[connection.Target] + (Point (0.0, 25.0))
+
                 Line.create [
-                    Line.startPoint ((sourceLocation + (Point (120.0, 25.0))) * state.Zoom)
-                    Line.endPoint ((targetLocation + (Point (0.0, 25.0))) * state.Zoom)
+                    Line.startPoint (sourceLocation * state.Zoom + state.WindowPosition)
+                    Line.endPoint (targetLocation * state.Zoom + state.WindowPosition)
                     Line.stroke "Green"
                     Line.strokeThickness 2.0
                 ]
@@ -377,24 +389,25 @@ let view (state: State) (dispatch) =
                     buffer dispatch state.WindowPosition state.Zoom location name blockId
 
                 | BlockType.Constraint constraintId ->
-                    constraint dispatch location name blockId
+                    constraint dispatch state.WindowPosition state.Zoom location name blockId
 
                 | BlockType.Conversion conversionId ->
-                    conversion dispatch location name blockId
+                    conversion dispatch state.WindowPosition state.Zoom location name blockId
 
                 | BlockType.Conveyor conveyorId ->
-                    conveyor dispatch location name blockId
+                    conveyor dispatch state.WindowPosition state.Zoom location name blockId
 
                 | BlockType.Merge mergeId ->
-                    merge dispatch location name blockId
+                    merge dispatch state.WindowPosition state.Zoom location name blockId
 
                 | BlockType.Split splitId ->
-                    split dispatch location name blockId
+                    split dispatch state.WindowPosition state.Zoom location name blockId
 
 
             match state.PointerState with
             | PointerState.AddingElement ->
                 let location = state.AddElementMenuLocation
+                let addLocation = (state.PointerPosition - state.WindowPosition) / state.Zoom
                 StackPanel.create [
                     StackPanel.orientation Orientation.Vertical
                     StackPanel.left location.X
@@ -402,11 +415,11 @@ let view (state: State) (dispatch) =
                     StackPanel.children [
                         Button.create [
                             Button.content "Buffer"
-                            Button.width (Dims.Block.width * state.Zoom)
-                            Button.height (Dims.Block.height + state.Zoom)
+                            Button.width Dims.Block.width
+                            Button.height Dims.Block.height
                             Button.onClick (fun e ->
                                 e.Handled <- true
-                                Msg.AddBlock { AddBlockType = AddBlockType.Buffer; Location = state.PointerPosition - state.WindowPosition } |> dispatch)
+                                Msg.AddBlock { AddBlockType = AddBlockType.Buffer; Location = addLocation } |> dispatch)
                         ]
                         Button.create [
                             Button.content "Constraint"
@@ -414,7 +427,7 @@ let view (state: State) (dispatch) =
                             Button.height Dims.Block.height
                             Button.onClick (fun e ->
                                 e.Handled <- true
-                                Msg.AddBlock { AddBlockType = AddBlockType.Constraint; Location = state.PointerPosition - state.WindowPosition} |> dispatch)
+                                Msg.AddBlock { AddBlockType = AddBlockType.Constraint; Location = addLocation } |> dispatch)
                         ]
                         Button.create [
                             Button.content "Conversion"
@@ -422,7 +435,7 @@ let view (state: State) (dispatch) =
                             Button.height Dims.Block.height
                             Button.onClick (fun e ->
                                 e.Handled <- true
-                                Msg.AddBlock { AddBlockType = AddBlockType.Conversion; Location = state.PointerPosition - state.WindowPosition} |> dispatch)
+                                Msg.AddBlock { AddBlockType = AddBlockType.Conversion; Location = addLocation } |> dispatch)
                         ]
                         Button.create [
                             Button.content "Conveyor"
@@ -430,7 +443,7 @@ let view (state: State) (dispatch) =
                             Button.height Dims.Block.height
                             Button.onClick (fun e ->
                                 e.Handled <- true
-                                Msg.AddBlock { AddBlockType = AddBlockType.Conveyor; Location = state.PointerPosition - state.WindowPosition} |> dispatch)
+                                Msg.AddBlock { AddBlockType = AddBlockType.Conveyor; Location = addLocation } |> dispatch)
                         ]
                         Button.create [
                             Button.content "Merge"
@@ -438,7 +451,7 @@ let view (state: State) (dispatch) =
                             Button.height Dims.Block.height
                             Button.onClick (fun e ->
                                 e.Handled <- true
-                                Msg.AddBlock { AddBlockType = AddBlockType.Merge; Location = state.PointerPosition - state.WindowPosition} |> dispatch)
+                                Msg.AddBlock { AddBlockType = AddBlockType.Merge; Location = addLocation } |> dispatch)
                         ]
                         Button.create [
                             Button.content "Split"
@@ -446,7 +459,7 @@ let view (state: State) (dispatch) =
                             Button.height Dims.Block.height
                             Button.onClick (fun e ->
                                 e.Handled <- true
-                                Msg.AddBlock { AddBlockType = AddBlockType.Split; Location = state.PointerPosition - state.WindowPosition } |> dispatch)
+                                Msg.AddBlock { AddBlockType = AddBlockType.Split; Location = addLocation } |> dispatch)
                         ]
                     ]
                 ]
