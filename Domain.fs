@@ -211,6 +211,8 @@ type Msg =
     | BlockChange of BlockChange
     | PanningStarted
     | PanningStopped
+    | ZoomIn
+    | ZoomOut
 
 [<Struct>]
 type Connection = {
@@ -273,10 +275,11 @@ type NextIds () =
 type State =
     {
         WindowPosition: Point
+        Zoom: float
         NextIds: NextIds
         PointerState: PointerState
         Blocks: Blocks
-        PointerLocation: Point
+        PointerPosition: Point
         Connections: HashSet<Connection>
         AddElementMenuLocation: Point
         EditBlock: BlockId voption
@@ -287,6 +290,7 @@ module State =
     let init () =
         {
             WindowPosition = Point(0.0, 0.0)
+            Zoom = 1.0
             NextIds = NextIds()
             PointerState = PointerState.Neutral
             Blocks =
@@ -297,7 +301,7 @@ module State =
                     Attributes = Attributes.init ()
                 }
             Connections = HashSet()
-            PointerLocation = Point (0.0, 0.0)
+            PointerPosition = Point (0.0, 0.0)
             AddElementMenuLocation = Point (0.0, 0.0)
             EditBlock = ValueNone
         }
@@ -318,6 +322,23 @@ module State =
                 { state with
                     PointerState = PointerState.Neutral  }
 
+            | Msg.ZoomIn ->
+                let newZoom = System.Math.Clamp (state.Zoom * 1.2, 0.5, 10.0)
+                let windowLocationDelta = state.WindowPosition - state.PointerPosition
+                let newWindowLocationPointerOffset = (newZoom / state.Zoom) * windowLocationDelta
+                let newWindowPosition = state.PointerPosition + newWindowLocationPointerOffset
+                { state with
+                    Zoom = newZoom
+                    WindowPosition = newWindowPosition }
+
+            | Msg.ZoomOut ->
+                let newZoom = System.Math.Clamp (state.Zoom * 0.8, 0.5, 10.0)
+                let windowLocationDelta = state.WindowPosition - state.PointerPosition
+                let newWindowLocationPointerOffset = (newZoom / state.Zoom) * windowLocationDelta
+                let newWindowPosition = state.PointerPosition + newWindowLocationPointerOffset
+                { state with
+                    Zoom = newZoom
+                    WindowPosition = newWindowPosition }
 
             | Msg.StartEditing blockIdx ->
                 { state with
@@ -428,7 +449,7 @@ module State =
                     | Selection.Block (blockIdx, position) ->
                         { state with
                             PointerState = PointerState.Dragging blockIdx
-                            PointerLocation = position }
+                            PointerPosition = position }
                     | Selection.Output blockIdx ->
                         { state with
                             PointerState = PointerState.ConnectingOutput blockIdx }
@@ -484,21 +505,21 @@ module State =
             | Msg.Move newPointerPoint ->
                 match state.PointerState with
                 | PointerState.Dragging blockIdx ->
-                    let delta = newPointerPoint - state.PointerLocation
+                    let delta = newPointerPoint - state.PointerPosition
                     let newState =
                         { state with
-                            PointerLocation = newPointerPoint }
+                            PointerPosition = newPointerPoint }
                     newState.Blocks.Locations[blockIdx] <- state.Blocks.Locations[blockIdx] + delta
                     newState
 
                 | PointerState.Panning ->
-                    let delta = newPointerPoint - state.PointerLocation
+                    let delta = newPointerPoint - state.PointerPosition
                     { state with
-                        PointerLocation = newPointerPoint
+                        PointerPosition = newPointerPoint
                         WindowPosition = state.WindowPosition + delta }
 
                 | _ ->
                     { state with
-                        PointerLocation = newPointerPoint }
+                        PointerPosition = newPointerPoint }
 
         newState
