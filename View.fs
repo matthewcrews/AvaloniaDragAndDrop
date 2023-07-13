@@ -280,17 +280,17 @@ let split dispatch (origin: Point) (zoom: float) (location: Point) (name: string
         ]
 
 
-let view (state: State) (dispatch) =
+let view (keyDownEvent: IEvent<System.EventHandler<KeyEventArgs>,KeyEventArgs>) (state: State) (dispatch) =
+    keyDownEvent.Add (fun e ->
+        e.Handled <- true
+        if e.Key = Key.Escape then
+            Msg.Escape |> dispatch)
+
     let canvasName = "DiagramCanvas"
     Canvas.create [
         Canvas.name canvasName
+        Canvas.focusable true
         Canvas.background "DarkSlateGray"
-        Canvas.onKeyDown (fun e ->
-            printfn "KeyDown")
-        Canvas.onKeyUp (fun e ->
-            e.Handled <- true
-            if e.Key = Key.Escape then
-                Msg.Escape |> dispatch)
         Canvas.onPointerMoved (fun e ->
             let source : Control = e.Source :?> Control
             if source.Name = canvasName then
@@ -335,8 +335,13 @@ let view (state: State) (dispatch) =
                 Line.create [
                     Line.startPoint (location * state.Zoom + state.WindowPosition)
                     Line.endPoint state.PointerPosition
+                    Line.focusable true
                     Line.stroke Dims.Line.color
                     Line.strokeThickness 2.0
+                    Line.onKeyDown (fun e ->
+                        e.Handled <- true
+                        if e.Key = Key.Escape then
+                            Msg.Escape |> dispatch)
                     Line.onKeyUp (fun e ->
                         e.Handled <- true
                         if e.Key = Key.Escape then

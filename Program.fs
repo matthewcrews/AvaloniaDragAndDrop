@@ -3,6 +3,7 @@
 #nowarn "46"
 
 open Avalonia
+open Avalonia.Controls
 open Avalonia.Themes.Fluent
 open Elmish
 open Avalonia.FuncUI.Hosts
@@ -15,11 +16,12 @@ open AvaloniaDragAndDrop.Domain
 type MainWindow() as this =
     inherit HostWindow()
     do
+        let topLevel = TopLevel.GetTopLevel this
         base.Title <- "Counter Example"
         base.Height <- 400.0
         base.Width <- 400.0
 
-        Elmish.Program.mkSimple State.init State.update View.view
+        Elmish.Program.mkSimple State.init State.update (View.view topLevel.KeyDown)
         |> Program.withHost this
         |> Program.withConsoleTrace
         |> Program.run
