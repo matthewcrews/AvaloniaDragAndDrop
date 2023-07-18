@@ -4,6 +4,7 @@
 
 open Avalonia
 open Avalonia.Controls
+open Avalonia.Input
 open Avalonia.Themes.Fluent
 open Elmish
 open Avalonia.FuncUI.Hosts
@@ -21,8 +22,21 @@ type MainWindow() as this =
         base.Height <- 400.0
         base.Width <- 400.0
 
-        Elmish.Program.mkSimple State.init State.update (View.view topLevel.KeyDown)
+        let subscriptions (state: State) : Sub<Msg> =
+            let keyDownSubscription (dispatch: Msg -> unit) =
+                let topLevel = TopLevel.GetTopLevel this
+                topLevel.KeyDown.Subscribe(fun e ->
+                    if e.Key = Key.Escape then
+                        dispatch Msg.Escape
+                )
+
+            [
+                [ nameof keyDownSubscription ], keyDownSubscription
+            ]
+
+        Elmish.Program.mkSimple State.init State.update View.view
         |> Program.withHost this
+        |> Program.withSubscription subscriptions
         |> Program.withConsoleTrace
         |> Program.run
 

@@ -279,15 +279,10 @@ let split dispatch (origin: Point) (zoom: float) (location: Point) (name: string
             ]
         ]
 
-
-let view (keyDownEvent: IEvent<System.EventHandler<KeyEventArgs>,KeyEventArgs>) (state: State) (dispatch) =
-    keyDownEvent.Add (fun e ->
-        e.Handled <- true
-        if e.Key = Key.Escape then
-            Msg.Escape |> dispatch)
-
+let canvas (state: State) dispatch =
     let canvasName = "DiagramCanvas"
     Canvas.create [
+        Canvas.dock Dock.Bottom
         Canvas.name canvasName
         Canvas.focusable true
         Canvas.background "DarkSlateGray"
@@ -559,5 +554,59 @@ let view (keyDownEvent: IEvent<System.EventHandler<KeyEventArgs>,KeyEventArgs>) 
                             ]
                     ]
                 ]
+        ]
+    ]
+
+let menu (state: State) dispatch =
+    Menu.create [
+        Menu.dock Dock.Top
+        Menu.horizontalAlignment HorizontalAlignment.Left
+        Menu.viewItems [
+            MenuItem.create [
+                MenuItem.header "File"
+                MenuItem.viewItems [
+                    MenuItem.create [
+                        MenuItem.header "Open"
+                    ]
+                    MenuItem.create [
+                        MenuItem.header "Save"
+                    ]
+                    MenuItem.create [
+                        MenuItem.header "Save as"
+                    ]
+                    MenuItem.create [
+                        MenuItem.header "Exit"
+                    ]
+                ]
+            ]
+            MenuItem.create [
+                MenuItem.header "Edit"
+                MenuItem.viewItems [
+                    MenuItem.create [
+                        MenuItem.header "Undo"
+                    ]
+                    MenuItem.create [
+                        MenuItem.header "Save"
+                    ]
+                    MenuItem.create [
+                        MenuItem.header "Save as"
+                    ]
+                    MenuItem.create [
+                        MenuItem.header "Exit"
+                    ]
+                ]
+            ]
+            MenuItem.create [
+                MenuItem.header "View"
+            ]
+        ]
+    ]
+
+
+let view (state: State) (dispatch) =
+    DockPanel.create [
+        DockPanel.children [
+            menu state dispatch
+            canvas state dispatch
         ]
     ]
