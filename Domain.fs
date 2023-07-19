@@ -213,9 +213,10 @@ type Msg =
     | PanningStopped
     | ZoomIn
     | ZoomOut
-    | Save
-    | Load
+    | SaveRequested
+    | OpenLoadScreen
     | SaveFileNameChanged of string
+    | LoadFile of fileName: string
 
 [<Struct>]
 type Connection = {
@@ -223,48 +224,98 @@ type Connection = {
     Target: BlockId
 }
 
-type NextIds () =
-    let mutable nextBlockId: BlockId = -1<_>
-    let mutable nextBufferId: BufferId = -1<_>
-    let mutable nextConstraintId: ConstraintId = -1<_>
-    let mutable nextConversionId: ConversionId = -1<_>
-    let mutable nextConveyorId: ConveyorId = -1<_>
-    let mutable nextMergeId: MergeId = -1<_>
-    let mutable nextSplitId: SplitId = -1<_>
+// type NextIds () =
+//     let mutable nextBlockId: BlockId = -1<_>
+//     let mutable nextBufferId: BufferId = -1<_>
+//     let mutable nextConstraintId: ConstraintId = -1<_>
+//     let mutable nextConversionId: ConversionId = -1<_>
+//     let mutable nextConveyorId: ConveyorId = -1<_>
+//     let mutable nextMergeId: MergeId = -1<_>
+//     let mutable nextSplitId: SplitId = -1<_>
+//
+//     member _.NextBlockId () =
+//         nextBlockId <- nextBlockId + 1<_>
+//         nextBlockId
+//
+//     member _.NextBufferId () =
+//         nextBufferId <- nextBufferId + 1<_>
+//         nextBufferId
+//
+//     member _.NextConstraintId () =
+//         nextConstraintId <- nextConstraintId + 1<_>
+//         nextConstraintId
+//
+//     member _.NextConversionId() =
+//         nextConversionId <- nextConversionId + 1<_>
+//         nextConversionId
+//
+//     member _.NextConveyorId () =
+//         nextConveyorId <- nextConveyorId + 1<_>
+//         nextConveyorId
+//
+//     member _.NextMergeId () =
+//         nextMergeId <- nextMergeId + 1<_>
+//         nextMergeId
+//
+//     member _.NextSplitId () =
+//         nextSplitId <- nextSplitId + 1<_>
+//         nextSplitId
 
-    member _.NextBlockId () =
-        nextBlockId <- nextBlockId + 1<_>
-        nextBlockId
+type NextIds =
+    {
+        mutable BlockId: BlockId
+        mutable BufferId: BufferId
+        mutable ConstraintId: ConstraintId
+        mutable ConversionId: ConversionId
+        mutable ConveyorId: ConveyorId
+        mutable MergeId: MergeId
+        mutable SplitId: SplitId
+    }
+    static member init () =
+        {
+            BlockId = -1<_>
+            BufferId = -1<_>
+            ConstraintId = -1<_>
+            ConversionId = -1<_>
+            ConveyorId = -1<_>
+            MergeId = -1<_>
+            SplitId = -1<_>
+        }
 
-    member _.NextBufferId () =
-        nextBufferId <- nextBufferId + 1<_>
-        nextBufferId
+    member n.NextBlockId () =
+        n.BlockId <- n.BlockId + 1<_>
+        n.BlockId
 
-    member _.NextConstraintId () =
-        nextConstraintId <- nextConstraintId + 1<_>
-        nextConstraintId
+    member n.NextBufferId () =
+        n.BufferId <- n.BufferId + 1<_>
+        n.BufferId
 
-    member _.NextConversionId() =
-        nextConversionId <- nextConversionId + 1<_>
-        nextConversionId
+    member n.NextConstraintId () =
+        n.ConstraintId <- n.ConstraintId + 1<_>
+        n.ConstraintId
 
-    member _.NextConveyorId () =
-        nextConveyorId <- nextConveyorId + 1<_>
-        nextConveyorId
+    member n.NextConversionId() =
+        n.ConversionId <- n.ConversionId + 1<_>
+        n.ConversionId
 
-    member _.NextMergeId () =
-        nextMergeId <- nextMergeId + 1<_>
-        nextMergeId
+    member n.NextConveyorId () =
+        n.ConveyorId <- n.ConveyorId + 1<_>
+        n.ConveyorId
 
-    member _.NextSplitId () =
-        nextSplitId <- nextSplitId + 1<_>
-        nextSplitId
+    member n.NextMergeId () =
+        n.MergeId <- n.MergeId + 1<_>
+        n.MergeId
+
+    member n.NextSplitId () =
+        n.SplitId <- n.SplitId + 1<_>
+        n.SplitId
 
 
 [<RequireQualifiedAccess>]
 type Window =
     | Editor
     | Save
+    | Load
 
 type State =
     {
@@ -273,7 +324,7 @@ type State =
         OutputDirectory: string option
         WindowPosition: Point
         Zoom: float
-        NextIds: NextIds
+        mutable NextIds: NextIds
         PointerState: PointerState
         Blocks: Blocks
         PointerPosition: Point
@@ -291,7 +342,7 @@ module State =
             OutputDirectory = None
             WindowPosition = Point(0.0, 0.0)
             Zoom = 1.0
-            NextIds = NextIds()
+            NextIds = NextIds.init ()
             PointerState = PointerState.Neutral
             Blocks =
                 {
@@ -318,7 +369,7 @@ module State =
                 { state with
                     FileName = Some newFileName }
 
-            | Msg.Save ->
+            | Msg.SaveRequested ->
 
                 match state.FileName with
                 | None ->
@@ -335,7 +386,19 @@ module State =
                     { state with
                         Window = Window.Editor }
 
+            | Msg.OpenLoadScreen ->
+                { state with
+                    Window = Window.Load }
 
+            | Msg.LoadFile fileName ->
+                let outputDirectory =
+                    state.OutputDirectory
+                    |> Option.defaultValue (System.Environment.GetFolderPath(System.Environment.SpecialFolder.UserProfile))
+                let filePath = System.IO.Path.Combine (outputDirectory, fileName)
+                let fileData = System.IO.File.ReadAllText filePath
+                let newState = Newtonsoft.Json.JsonConvert.DeserializeObject<State> fileData
+                { newState with
+                    Window = Window.Editor }
 
             | Msg.PanningStarted ->
                 { state with

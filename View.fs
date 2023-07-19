@@ -568,11 +568,13 @@ let menu (state: State) dispatch =
                 MenuItem.viewItems [
                     MenuItem.create [
                         MenuItem.header "Open"
+                        MenuItem.onClick (fun e ->
+                            Msg.OpenLoadScreen |> dispatch)
                     ]
                     MenuItem.create [
                         MenuItem.header "Save"
                         MenuItem.onClick (fun e ->
-                            Msg.Save |> dispatch)
+                            Msg.SaveRequested |> dispatch)
                     ]
                     MenuItem.create [
                         MenuItem.header "Save as"
@@ -605,7 +607,7 @@ let menu (state: State) dispatch =
         ]
     ]
 
-let editor (state: State) dispatch =
+let save (state: State) dispatch =
     let outputDirectory =
         state.OutputDirectory
         |> Option.defaultValue (Environment.GetFolderPath(Environment.SpecialFolder.UserProfile))
@@ -628,7 +630,7 @@ let editor (state: State) dispatch =
             Button.create [
                 Button.content "Save"
                 Button.onClick (fun e ->
-                    Msg.Save |> dispatch)
+                    Msg.SaveRequested |> dispatch)
             ]
             TextBlock.create [
                 TextBlock.text "Directory:"
@@ -646,6 +648,37 @@ let editor (state: State) dispatch =
         ]
     ]
 
+let load (state: State) dispatch =
+    let outputDirectory =
+        state.OutputDirectory
+        |> Option.defaultValue (Environment.GetFolderPath(Environment.SpecialFolder.UserProfile))
+
+    let outputDirectoryFiles =
+        System.IO.Directory.GetFiles outputDirectory
+        |> Array.map System.IO.Path.GetFileName
+        |> Array.filter (fun s ->
+            s.EndsWith ".aidos")
+
+    StackPanel.create [
+        StackPanel.orientation Orientation.Vertical
+        StackPanel.children [
+            TextBlock.create [
+                TextBlock.text "Directory:"
+            ]
+            TextBlock.create [
+                TextBlock.text outputDirectory
+            ]
+            TextBlock.create [
+                TextBlock.text "Files:"
+            ]
+            for outputDirectoryFile in outputDirectoryFiles do
+                Button.create [
+                    Button.content outputDirectoryFile
+                    Button.onClick (fun e ->
+                        Msg.LoadFile outputDirectoryFile |> dispatch)
+                ]
+        ]
+    ]
 
 
 let view (state: State) (dispatch) =
@@ -656,6 +689,8 @@ let view (state: State) (dispatch) =
             | Window.Editor ->
                 canvas state dispatch
             | Window.Save ->
-                editor state dispatch
+                save state dispatch
+            | Window.Load ->
+                load state dispatch
         ]
     ]
