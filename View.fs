@@ -1,5 +1,6 @@
 ﻿module AvaloniaDragAndDrop.View
 
+open System
 open Avalonia
 open Avalonia.Controls.Shapes
 open Avalonia.Controls
@@ -570,6 +571,8 @@ let menu (state: State) dispatch =
                     ]
                     MenuItem.create [
                         MenuItem.header "Save"
+                        MenuItem.onClick (fun e ->
+                            Msg.Save |> dispatch)
                     ]
                     MenuItem.create [
                         MenuItem.header "Save as"
@@ -586,7 +589,7 @@ let menu (state: State) dispatch =
                         MenuItem.header "Undo"
                     ]
                     MenuItem.create [
-                        MenuItem.header "Save"
+                        MenuItem.header "Redo"
                     ]
                     MenuItem.create [
                         MenuItem.header "Save as"
@@ -602,11 +605,57 @@ let menu (state: State) dispatch =
         ]
     ]
 
+let editor (state: State) dispatch =
+    let outputDirectory =
+        state.OutputDirectory
+        |> Option.defaultValue (Environment.GetFolderPath(Environment.SpecialFolder.UserProfile))
+
+    let outputDirectoryFiles =
+        System.IO.Directory.GetFiles outputDirectory
+        |> Array.map System.IO.Path.GetFileName
+
+    StackPanel.create [
+        StackPanel.orientation Orientation.Vertical
+        StackPanel.children [
+            TextBlock.create [
+                TextBlock.text "File name:"
+            ]
+            TextBox.create [
+                TextBox.text (state.FileName |> Option.defaultValue "")
+                TextBox.onTextChanged (fun e ->
+                    Msg.SaveFileNameChanged e |> dispatch)
+            ]
+            Button.create [
+                Button.content "Save"
+                Button.onClick (fun e ->
+                    Msg.Save |> dispatch)
+            ]
+            TextBlock.create [
+                TextBlock.text "Directory:"
+            ]
+            TextBlock.create [
+                TextBlock.text outputDirectory
+            ]
+            TextBlock.create [
+                TextBlock.text "Files:"
+            ]
+            for outputDirectoryFile in outputDirectoryFiles do
+                TextBlock.create [
+                    TextBlock.text outputDirectoryFile
+                ]
+        ]
+    ]
+
+
 
 let view (state: State) (dispatch) =
     DockPanel.create [
         DockPanel.children [
             menu state dispatch
-            canvas state dispatch
+            match state.Window with
+            | Window.Editor ->
+                canvas state dispatch
+            | Window.Save ->
+                editor state dispatch
         ]
     ]

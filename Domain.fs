@@ -213,25 +213,15 @@ type Msg =
     | PanningStopped
     | ZoomIn
     | ZoomOut
+    | Save
+    | Load
+    | SaveFileNameChanged of string
 
 [<Struct>]
 type Connection = {
     Source: BlockId
     Target: BlockId
 }
-
-// type NextIds () =
-//     let mutable nextBufferId = -1<_>
-//     let mutable nextConstraintId = -1<_>
-//
-//     member _.NextBufferId =
-//         nextBufferId <- nextBufferId + 1<_>
-//         nextBufferId
-//
-//     member _.NextConstraintId =
-//         nextConstraintId <- nextConstraintId
-//         nextConstraintId
-
 
 type NextIds () =
     let mutable nextBlockId: BlockId = -1<_>
@@ -271,9 +261,16 @@ type NextIds () =
         nextSplitId
 
 
+[<RequireQualifiedAccess>]
+type Window =
+    | Editor
+    | Save
 
 type State =
     {
+        Window: Window
+        FileName: string option
+        OutputDirectory: string option
         WindowPosition: Point
         Zoom: float
         NextIds: NextIds
@@ -289,6 +286,9 @@ module State =
 
     let init () =
         {
+            Window = Window.Editor
+            FileName = None
+            OutputDirectory = None
             WindowPosition = Point(0.0, 0.0)
             Zoom = 1.0
             NextIds = NextIds()
@@ -313,6 +313,29 @@ module State =
                 { state with
                     PointerState = PointerState.Neutral
                     EditBlock = ValueNone }
+
+            | Msg.SaveFileNameChanged newFileName ->
+                { state with
+                    FileName = Some newFileName }
+
+            | Msg.Save ->
+
+                match state.FileName with
+                | None ->
+                    { state with Window = Window.Save }
+
+                | Some fileName ->
+                    let outputDirectory =
+                        state.OutputDirectory
+                        |> Option.defaultValue (System.Environment.GetFolderPath(System.Environment.SpecialFolder.UserProfile))
+                    let fullFilename = $"{fileName}.aidos"
+                    let savePath = System.IO.Path.Combine (outputDirectory, fullFilename)
+                    let saveData = Newtonsoft.Json.JsonConvert.SerializeObject state
+                    System.IO.File.WriteAllText (savePath, saveData)
+                    { state with
+                        Window = Window.Editor }
+
+
 
             | Msg.PanningStarted ->
                 { state with
