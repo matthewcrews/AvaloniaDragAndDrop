@@ -244,6 +244,7 @@ type Msg =
     | OpenLoadScreen
     | SaveFileNameChanged of string
     | LoadFile of fileName: string
+    | Undo
 
 [<Struct>]
 type Connection = {
@@ -479,6 +480,18 @@ module State =
             match msg with
             | Msg.Cmd cmd ->
                 Cmd.handle state cmd
+
+            | Msg.Undo ->
+                match state.History with
+                | [] ->
+                    state
+                | _ :: newHistory ->
+                    let newState =
+                        let replayCmds = newHistory |> List.rev
+                        let initState = init ()
+                        (initState, replayCmds)
+                        ||> List.fold Cmd.handle
+                    newState
 
             | Msg.Escape ->
                 { state with

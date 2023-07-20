@@ -595,6 +595,8 @@ let menu (state: State) dispatch =
                 MenuItem.viewItems [
                     MenuItem.create [
                         MenuItem.header "Undo"
+                        MenuItem.onClick (fun e ->
+                            Msg.Undo |> dispatch)
                     ]
                     MenuItem.create [
                         MenuItem.header "Redo"
