@@ -245,6 +245,7 @@ type Msg =
     | SaveFileNameChanged of string
     | LoadFile of fileName: string
     | Undo
+    | Redo
 
 [<Struct>]
 type Connection = {
@@ -323,6 +324,7 @@ type State =
         AddElementMenuLocation: Point
         EditBlock: BlockId voption
         History: list<Cmd>
+        Undos: list<Cmd>
     }
 
 module State =
@@ -348,6 +350,7 @@ module State =
             AddElementMenuLocation = Point (0.0, 0.0)
             EditBlock = ValueNone
             History = []
+            Undos = []
         }
 
     module private Cmd =
@@ -472,7 +475,8 @@ module State =
                         PointerState = PointerState.Neutral }
 
             { newState with
-                History = cmd :: newState.History }
+                History = cmd :: newState.History
+                Undos = [] }
 
 
     let rec update (msg: Msg) (state: State) : State =
@@ -485,13 +489,23 @@ module State =
                 match state.History with
                 | [] ->
                     state
-                | _ :: newHistory ->
+                | prevCmd :: newHistory ->
                     let newState =
                         let replayCmds = newHistory |> List.rev
                         let initState = init ()
                         (initState, replayCmds)
                         ||> List.fold Cmd.handle
-                    newState
+                    { newState with
+                        Undos = prevCmd :: state.Undos }
+
+            | Msg.Redo ->
+                match state.Undos with
+                | [] ->
+                    state
+                | prevCmd :: remainingCmds ->
+                    let newState = Cmd.handle state prevCmd
+                    { newState with
+                        Undos = remainingCmds }
 
             | Msg.Escape ->
                 { state with

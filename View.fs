@@ -600,6 +600,8 @@ let menu (state: State) dispatch =
                     ]
                     MenuItem.create [
                         MenuItem.header "Redo"
+                        MenuItem.onClick (fun e ->
+                            Msg.Redo |> dispatch)
                     ]
                     MenuItem.create [
                         MenuItem.header "Save as"
