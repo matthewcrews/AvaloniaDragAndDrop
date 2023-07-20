@@ -8,6 +8,14 @@ open Avalonia
 let notImplementedExn () =
     raise (System.NotImplementedException ())
 
+module Array =
+
+    let add elem (arr: _[]) =
+        let newArr = Array.zeroCreate (arr.Length + 1)
+        arr.CopyTo(newArr, 0)
+        newArr[newArr.Length - 1] <- elem
+        newArr
+
 [<RequireQualifiedAccess>]
 module Units =
 
@@ -62,8 +70,8 @@ module Attributes =
 
     [<RequireQualifiedAccess>]
     type SplitType =
-        | Priority of BlockId[]
-        | Proportional of (float * int)[]
+        | Priority of targetBlockIds: BlockId[]
+        | Proportional of targetBlockProportions: (float * BlockId)[]
 
     [<Struct>]
     type Split =
@@ -73,8 +81,8 @@ module Attributes =
 
     [<RequireQualifiedAccess>]
     type MergeType =
-        | Priority of int[]
-        | Proportional of (float *  int)[]
+        | Priority of sourceBlockIds: BlockId[]
+        | Proportional of sourceBlockProportions: (float *  BlockId)[]
 
     [<Struct>]
     type Merge =
@@ -96,6 +104,8 @@ module Attributes =
             MaxVelocity: float
         }
 
+
+open Attributes
 
 [<Struct>]
 type Attributes =
@@ -355,7 +365,6 @@ module State =
 
     module private Cmd =
 
-
         let handle (state: State) (cmd: Cmd) : State =
             let newState =
                 match cmd with
@@ -422,6 +431,35 @@ module State =
                         Source = addConnectionPayload.Source
                         Target = addConnectionPayload.Target
                     }
+
+                    match state.Blocks.Types[addConnectionPayload.Source] with
+                    | BlockType.Split splitId ->
+                        state.Blocks.Attributes.Splits[splitId] <-
+                            match state.Blocks.Attributes.Splits[splitId].Type with
+                            | SplitType.Priority targetBlockIds ->
+                                let newPriorities = Array.add addConnectionPayload.Source targetBlockIds
+                                { Type = SplitType.Priority newPriorities }
+
+                            | SplitType.Proportional targetBlockProportions ->
+                                let newTargetBlockProportions = Array.add (1.0, addConnectionPayload.Source) targetBlockProportions
+                                { Type = SplitType.Proportional newTargetBlockProportions }
+
+                    | _ -> ()
+
+                    match state.Blocks.Types[addConnectionPayload.Target] with
+                    | BlockType.Merge mergeId ->
+                        state.Blocks.Attributes.Merges[mergeId] <-
+                            match state.Blocks.Attributes.Merges[mergeId].Type with
+                            | MergeType.Priority sourceBlockIds ->
+                                let newPriorities = Array.add addConnectionPayload.Source sourceBlockIds
+                                { Type = MergeType.Priority newPriorities }
+
+                            | MergeType.Proportional sourceBlockProportions ->
+                                let newSourceBlockProportions = Array.add (1.0, addConnectionPayload.Source) sourceBlockProportions
+                                { Type = MergeType.Proportional newSourceBlockProportions }
+
+                    | _ -> ()
+
                     { state with
                         Connections = state.Connections.Add newConnection
                         PointerState = PointerState.Neutral }

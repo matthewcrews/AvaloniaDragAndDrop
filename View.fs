@@ -9,6 +9,7 @@ open Avalonia.Input
 open Avalonia.Layout
 open Avalonia.Media
 open AvaloniaDragAndDrop.Domain
+open AvaloniaDragAndDrop.Domain.Attributes
 
 
 module Dims =
@@ -76,7 +77,7 @@ let outputAnchor dispatch (zoom: float) blockId =
     ]
 
 
-let buffer dispatch (origin: Point) (zoom: float) (location: Point) (name: string) (blockId: BlockId) =
+let buffer dispatch (canvas: Canvas) (origin: Point) (zoom: float) (location: Point) (name: string) (blockId: BlockId) =
     let location = zoom * location + origin
     View.createWithKey $"Buffer{blockId}"
         DockPanel.create [
@@ -91,14 +92,14 @@ let buffer dispatch (origin: Point) (zoom: float) (location: Point) (name: strin
                     Button.background Dims.Buffer.color
                     Button.onPointerPressed (fun e ->
                         e.Handled <- true
-                        let newPointerLocation = e.GetPosition null
+                        let newPointerLocation = e.GetPosition canvas
                         Msg.Selection (Selection.Block (blockId, newPointerLocation)) |> dispatch)
                     Button.onPointerReleased (fun e ->
                         e.Handled <- true
                         Msg.Deselection (Deselection.Block blockId) |> dispatch)
                     Button.onPointerMoved (fun e ->
                         e.Handled <- true
-                        let newPointerLocation = e.GetPosition null
+                        let newPointerLocation = e.GetPosition canvas
                         Msg.Move newPointerLocation |> dispatch)
                     Button.onDoubleTapped (fun e ->
                         e.Handled <- true
@@ -108,7 +109,7 @@ let buffer dispatch (origin: Point) (zoom: float) (location: Point) (name: strin
             ]
         ]
 
-let constraint dispatch (origin: Point) (zoom: float) (location: Point) (name: string) (blockId: BlockId) =
+let constraint dispatch (canvas: Canvas) (origin: Point) (zoom: float) (location: Point) (name: string) (blockId: BlockId) =
     let location = zoom * location + origin
     View.createWithKey $"Constraint{blockId}"
         DockPanel.create [
@@ -125,14 +126,14 @@ let constraint dispatch (origin: Point) (zoom: float) (location: Point) (name: s
                     Button.background Dims.Constraint.color
                     Button.onPointerPressed (fun e ->
                         e.Handled <- true
-                        let newPointerLocation = e.GetPosition null
+                        let newPointerLocation = e.GetPosition canvas
                         Msg.Selection (Selection.Block (blockId, newPointerLocation)) |> dispatch)
                     Button.onPointerReleased (fun e ->
                         e.Handled <- true
                         Msg.Deselection (Deselection.Block blockId) |> dispatch)
                     Button.onPointerMoved (fun e ->
                         e.Handled <- true
-                        let newPointerLocation = e.GetPosition null
+                        let newPointerLocation = e.GetPosition canvas
                         Msg.Move newPointerLocation |> dispatch)
                     Button.onDoubleTapped (fun e ->
                         e.Handled <- true
@@ -142,7 +143,7 @@ let constraint dispatch (origin: Point) (zoom: float) (location: Point) (name: s
             ]
         ]
 
-let conversion dispatch (origin: Point) (zoom: float) (location: Point) (name: string) (blockId: BlockId) =
+let conversion dispatch (canvas: Canvas) (origin: Point) (zoom: float) (location: Point) (name: string) (blockId: BlockId) =
     let location = zoom * location + origin
     View.createWithKey $"Conversion{blockId}"
         DockPanel.create [
@@ -159,14 +160,14 @@ let conversion dispatch (origin: Point) (zoom: float) (location: Point) (name: s
                     Button.background Dims.Conversion.color
                     Button.onPointerPressed (fun e ->
                         e.Handled <- true
-                        let newPointerLocation = e.GetPosition null
+                        let newPointerLocation = e.GetPosition canvas
                         Msg.Selection (Selection.Block (blockId, newPointerLocation)) |> dispatch)
                     Button.onPointerReleased (fun e ->
                         e.Handled <- true
                         Msg.Deselection (Deselection.Block blockId) |> dispatch)
                     Button.onPointerMoved (fun e ->
                         e.Handled <- true
-                        let newPointerLocation = e.GetPosition null
+                        let newPointerLocation = e.GetPosition canvas
                         Msg.Move newPointerLocation |> dispatch)
                     Button.onDoubleTapped (fun e ->
                         e.Handled <- true
@@ -176,7 +177,7 @@ let conversion dispatch (origin: Point) (zoom: float) (location: Point) (name: s
             ]
         ]
 
-let conveyor dispatch (origin: Point) (zoom: float) (location: Point) (name: string) (blockId: BlockId) =
+let conveyor dispatch (canvas: Canvas) (origin: Point) (zoom: float) (location: Point) (name: string) (blockId: BlockId) =
     let location = zoom * location + origin
     View.createWithKey $"Conversion{blockId}"
         DockPanel.create [
@@ -193,14 +194,14 @@ let conveyor dispatch (origin: Point) (zoom: float) (location: Point) (name: str
                     Button.background Dims.Conveyor.color
                     Button.onPointerPressed (fun e ->
                         e.Handled <- true
-                        let newPointerLocation = e.GetPosition null
+                        let newPointerLocation = e.GetPosition canvas
                         Msg.Selection (Selection.Block (blockId, newPointerLocation)) |> dispatch)
                     Button.onPointerReleased (fun e ->
                         e.Handled <- true
                         Msg.Deselection (Deselection.Block blockId) |> dispatch)
                     Button.onPointerMoved (fun e ->
                         e.Handled <- true
-                        let newPointerLocation = e.GetPosition null
+                        let newPointerLocation = e.GetPosition canvas
                         Msg.Move newPointerLocation |> dispatch)
                     Button.onDoubleTapped (fun e ->
                         e.Handled <- true
@@ -211,7 +212,7 @@ let conveyor dispatch (origin: Point) (zoom: float) (location: Point) (name: str
         ]
 
 
-let merge dispatch (origin: Point) (zoom: float) (location: Point) (name: string) (blockId: BlockId) =
+let merge dispatch (canvas: Canvas) (origin: Point) (zoom: float) (location: Point) (name: string) (blockId: BlockId) =
     let location = zoom * location + origin
     View.createWithKey $"Conversion{blockId}"
         DockPanel.create [
@@ -228,14 +229,14 @@ let merge dispatch (origin: Point) (zoom: float) (location: Point) (name: string
                     Button.background Dims.Merge.color
                     Button.onPointerPressed (fun e ->
                         e.Handled <- true
-                        let newPointerLocation = e.GetPosition null
+                        let newPointerLocation = e.GetPosition canvas
                         Msg.Selection (Selection.Block (blockId, newPointerLocation)) |> dispatch)
                     Button.onPointerReleased (fun e ->
                         e.Handled <- true
                         Msg.Deselection (Deselection.Block blockId) |> dispatch)
                     Button.onPointerMoved (fun e ->
                         e.Handled <- true
-                        let newPointerLocation = e.GetPosition null
+                        let newPointerLocation = e.GetPosition canvas
                         Msg.Move newPointerLocation |> dispatch)
                     Button.onDoubleTapped (fun e ->
                         e.Handled <- true
@@ -246,7 +247,7 @@ let merge dispatch (origin: Point) (zoom: float) (location: Point) (name: string
         ]
 
 
-let split dispatch (origin: Point) (zoom: float) (location: Point) (name: string) (blockId: BlockId) =
+let split dispatch (canvas: Canvas) (origin: Point) (zoom: float) (location: Point) (name: string) (blockId: BlockId) =
     let location = zoom * location + origin
     View.createWithKey $"Conversion{blockId}"
         DockPanel.create [
@@ -263,14 +264,14 @@ let split dispatch (origin: Point) (zoom: float) (location: Point) (name: string
                     Button.background Dims.Split.color
                     Button.onPointerPressed (fun e ->
                         e.Handled <- true
-                        let newPointerLocation = e.GetPosition null
+                        let newPointerLocation = e.GetPosition canvas
                         Msg.Selection (Selection.Block (blockId, newPointerLocation)) |> dispatch)
                     Button.onPointerReleased (fun e ->
                         e.Handled <- true
                         Msg.Deselection (Deselection.Block blockId) |> dispatch)
                     Button.onPointerMoved (fun e ->
                         e.Handled <- true
-                        let newPointerLocation = e.GetPosition null
+                        let newPointerLocation = e.GetPosition canvas
                         Msg.Move newPointerLocation |> dispatch)
                     Button.onDoubleTapped (fun e ->
                         e.Handled <- true
@@ -280,18 +281,20 @@ let split dispatch (origin: Point) (zoom: float) (location: Point) (name: string
             ]
         ]
 
-let canvas (state: State) dispatch =
-    let canvasName = "DiagramCanvas"
+let editor (state: State) dispatch =
+    let canvasName = "EditorCanvas"
+    let mutable canvas = null
     Canvas.create [
+        Canvas.init (fun x ->
+            canvas <- x)
         Canvas.dock Dock.Bottom
         Canvas.name canvasName
-        Canvas.focusable true
         Canvas.background "DarkSlateGray"
         Canvas.onPointerMoved (fun e ->
             let source : Control = e.Source :?> Control
             if source.Name = canvasName then
                 e.Handled <- true
-                let newPointerLocation = e.GetPosition null
+                let newPointerLocation = e.GetPosition canvas
                 Msg.Move newPointerLocation |> dispatch)
         Canvas.onPointerReleased (fun e ->
             if e.InitialPressMouseButton = MouseButton.Middle then
@@ -303,7 +306,7 @@ let canvas (state: State) dispatch =
                 if source.Name = canvasName then
                     e.Handled <- true
                     if e.InitialPressMouseButton = MouseButton.Right then
-                        let newPointerLocation = e.GetPosition null
+                        let newPointerLocation = e.GetPosition canvas
                         Msg.RequestAddItem newPointerLocation |> dispatch
                     elif e.InitialPressMouseButton = MouseButton.Left then
                         Msg.Escape |> dispatch
@@ -331,17 +334,8 @@ let canvas (state: State) dispatch =
                 Line.create [
                     Line.startPoint (location * state.Zoom + state.WindowPosition)
                     Line.endPoint state.PointerPosition
-                    Line.focusable true
                     Line.stroke Dims.Line.color
                     Line.strokeThickness 2.0
-                    Line.onKeyDown (fun e ->
-                        e.Handled <- true
-                        if e.Key = Key.Escape then
-                            Msg.Escape |> dispatch)
-                    Line.onKeyUp (fun e ->
-                        e.Handled <- true
-                        if e.Key = Key.Escape then
-                            Msg.Escape |> dispatch)
                 ]
                 // Drawing triangle
                 // Canvas.create [
@@ -387,22 +381,22 @@ let canvas (state: State) dispatch =
 
                 match state.Blocks.Types[blockId] with
                 | BlockType.Buffer bufferId ->
-                    buffer dispatch state.WindowPosition state.Zoom location name blockId
+                    buffer dispatch canvas state.WindowPosition state.Zoom location name blockId
 
                 | BlockType.Constraint constraintId ->
-                    constraint dispatch state.WindowPosition state.Zoom location name blockId
+                    constraint dispatch canvas state.WindowPosition state.Zoom location name blockId
 
                 | BlockType.Conversion conversionId ->
-                    conversion dispatch state.WindowPosition state.Zoom location name blockId
+                    conversion dispatch canvas state.WindowPosition state.Zoom location name blockId
 
                 | BlockType.Conveyor conveyorId ->
-                    conveyor dispatch state.WindowPosition state.Zoom location name blockId
+                    conveyor dispatch canvas state.WindowPosition state.Zoom location name blockId
 
                 | BlockType.Merge mergeId ->
-                    merge dispatch state.WindowPosition state.Zoom location name blockId
+                    merge dispatch canvas state.WindowPosition state.Zoom location name blockId
 
                 | BlockType.Split splitId ->
-                    split dispatch state.WindowPosition state.Zoom location name blockId
+                    split dispatch canvas state.WindowPosition state.Zoom location name blockId
 
 
             match state.PointerState with
@@ -559,6 +553,19 @@ let canvas (state: State) dispatch =
                                     Msg.Cmd (Cmd.ChangeBlock (BlockChangePayload.Conveyor (ConveyorChange.MaxVelocity (conveyorId, float e))))
                                     |> dispatch)
                             ]
+
+                        | BlockType.Merge mergeId ->
+                            let mergeAttr = state.Blocks.Attributes.Merges[mergeId]
+                            match mergeAttr.Type with
+                            | MergeType.Priority sourceBlockIds ->
+                                TextBlock.create [
+                                    TextBlock.text "Priority"
+                                ]
+                                for sourceBlockId in sourceBlockIds do
+                                    let sourceName = state.Blocks.Names[sourceBlockId]
+                                    TextBlock.create [
+                                        TextBlock.text sourceName
+                                    ]
                     ]
                 ]
         ]
@@ -697,7 +704,7 @@ let view (state: State) (dispatch) =
             menu state dispatch
             match state.Window with
             | Window.Editor ->
-                canvas state dispatch
+                editor state dispatch
             | Window.Save ->
                 save state dispatch
             | Window.Load ->
