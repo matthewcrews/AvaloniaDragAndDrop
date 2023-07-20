@@ -420,7 +420,8 @@ let canvas (state: State) dispatch =
                             Button.height Dims.Block.height
                             Button.onClick (fun e ->
                                 e.Handled <- true
-                                Msg.AddBlock { AddBlockType = AddBlockType.Buffer; Location = addLocation } |> dispatch)
+                                Msg.Cmd (Cmd.AddBlock { AddBlockType = AddBlockType.Buffer; Location = addLocation })
+                                |> dispatch)
                         ]
                         Button.create [
                             Button.content "Constraint"
@@ -428,7 +429,8 @@ let canvas (state: State) dispatch =
                             Button.height Dims.Block.height
                             Button.onClick (fun e ->
                                 e.Handled <- true
-                                Msg.AddBlock { AddBlockType = AddBlockType.Constraint; Location = addLocation } |> dispatch)
+                                Msg.Cmd  (Cmd.AddBlock { AddBlockType = AddBlockType.Constraint; Location = addLocation })
+                                |> dispatch)
                         ]
                         Button.create [
                             Button.content "Conversion"
@@ -436,7 +438,8 @@ let canvas (state: State) dispatch =
                             Button.height Dims.Block.height
                             Button.onClick (fun e ->
                                 e.Handled <- true
-                                Msg.AddBlock { AddBlockType = AddBlockType.Conversion; Location = addLocation } |> dispatch)
+                                Msg.Cmd (Cmd.AddBlock { AddBlockType = AddBlockType.Conversion; Location = addLocation })
+                                |> dispatch)
                         ]
                         Button.create [
                             Button.content "Conveyor"
@@ -444,7 +447,8 @@ let canvas (state: State) dispatch =
                             Button.height Dims.Block.height
                             Button.onClick (fun e ->
                                 e.Handled <- true
-                                Msg.AddBlock { AddBlockType = AddBlockType.Conveyor; Location = addLocation } |> dispatch)
+                                Msg.Cmd (Cmd.AddBlock { AddBlockType = AddBlockType.Conveyor; Location = addLocation })
+                                |> dispatch)
                         ]
                         Button.create [
                             Button.content "Merge"
@@ -452,7 +456,8 @@ let canvas (state: State) dispatch =
                             Button.height Dims.Block.height
                             Button.onClick (fun e ->
                                 e.Handled <- true
-                                Msg.AddBlock { AddBlockType = AddBlockType.Merge; Location = addLocation } |> dispatch)
+                                Msg.Cmd (Cmd.AddBlock { AddBlockType = AddBlockType.Merge; Location = addLocation })
+                                |> dispatch)
                         ]
                         Button.create [
                             Button.content "Split"
@@ -460,7 +465,8 @@ let canvas (state: State) dispatch =
                             Button.height Dims.Block.height
                             Button.onClick (fun e ->
                                 e.Handled <- true
-                                Msg.AddBlock { AddBlockType = AddBlockType.Split; Location = addLocation } |> dispatch)
+                                Msg.Cmd (Cmd.AddBlock { AddBlockType = AddBlockType.Split; Location = addLocation })
+                                |> dispatch)
                         ]
                     ]
                 ]
@@ -487,7 +493,7 @@ let canvas (state: State) dispatch =
                             TextBox.create [
                                 TextBox.text (string bufferAttr.Capacity)
                                 TextBox.onTextChanged (fun e ->
-                                    Msg.BlockChange (BlockChange.Buffer (BufferChange.Capacity (bufferId, float e)))
+                                    Msg.Cmd (Cmd.ChangeBlock (BlockChangePayload.Buffer (BufferChange.Capacity (bufferId, float e))))
                                     |> dispatch)
                             ]
                             TextBlock.create [
@@ -496,7 +502,7 @@ let canvas (state: State) dispatch =
                             TextBox.create [
                                 TextBox.text (string bufferAttr.InitialVolume)
                                 TextBox.onTextChanged (fun e ->
-                                    Msg.BlockChange (BlockChange.Buffer (BufferChange.InitialVolume (bufferId, float e)))
+                                    Msg.Cmd (Cmd.ChangeBlock (BlockChangePayload.Buffer (BufferChange.InitialVolume (bufferId, float e))))
                                     |> dispatch)
                             ]
 
@@ -508,7 +514,7 @@ let canvas (state: State) dispatch =
                             TextBox.create [
                                 TextBox.text (string constraintAttr.Limit)
                                 TextBox.onTextChanged (fun e ->
-                                    Msg.BlockChange (BlockChange.Constraint (ConstraintChange.Limit (constraintId, float e)))
+                                    Msg.Cmd (Cmd.ChangeBlock (BlockChangePayload.Constraint (ConstraintChange.Limit (constraintId, float e))))
                                     |> dispatch)
                             ]
 
@@ -520,7 +526,7 @@ let canvas (state: State) dispatch =
                             TextBox.create [
                                 TextBox.text (string conversionAttr.Coefficient)
                                 TextBox.onTextChanged (fun e ->
-                                    Msg.BlockChange (BlockChange.Conversion (ConversionChange.Coefficient (conversionId, float e)))
+                                    Msg.Cmd (Cmd.ChangeBlock (BlockChangePayload.Conversion (ConversionChange.Coefficient (conversionId, float e))))
                                     |> dispatch)
                             ]
 
@@ -532,7 +538,7 @@ let canvas (state: State) dispatch =
                             TextBox.create [
                                 TextBox.text (string conveyorAttr.Height)
                                 TextBox.onTextChanged (fun e ->
-                                    Msg.BlockChange (BlockChange.Conveyor (ConveyorChange.Height (conveyorId, float e)))
+                                    Msg.Cmd (Cmd.ChangeBlock (BlockChangePayload.Conveyor (ConveyorChange.Height (conveyorId, float e))))
                                     |> dispatch)
                             ]
                             TextBlock.create [
@@ -541,7 +547,7 @@ let canvas (state: State) dispatch =
                             TextBox.create [
                                 TextBox.text (string conveyorAttr.Length)
                                 TextBox.onTextChanged (fun e ->
-                                    Msg.BlockChange (BlockChange.Conveyor (ConveyorChange.Length (conveyorId, float e)))
+                                    Msg.Cmd (Cmd.ChangeBlock (BlockChangePayload.Conveyor (ConveyorChange.Length (conveyorId, float e))))
                                     |> dispatch)
                             ]
                             TextBlock.create [
@@ -550,7 +556,7 @@ let canvas (state: State) dispatch =
                             TextBox.create [
                                 TextBox.text (string conveyorAttr.MaxVelocity)
                                 TextBox.onTextChanged (fun e ->
-                                    Msg.BlockChange (BlockChange.Conveyor (ConveyorChange.MaxVelocity (conveyorId, float e)))
+                                    Msg.Cmd (Cmd.ChangeBlock (BlockChangePayload.Conveyor (ConveyorChange.MaxVelocity (conveyorId, float e))))
                                     |> dispatch)
                             ]
                     ]
